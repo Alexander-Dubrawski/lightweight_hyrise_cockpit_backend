@@ -1,0 +1,14 @@
+[flake8]
+
+# extend-ignore
+# E203: https://github.com/psf/black#slices
+# W503: https://github.com/psf/black#line-breaks--binary-operators
+# E501: https://github.com/psf/black#line-breaks--binary-operators
+# I***: isort
+extend-ignore = E203, W503, E501, I
+
+# max-complexity: https://en.wikipedia.org/wiki/Cyclomatic_complexity#Limiting_complexity_during_development
+max-complexity = 7
+
+# max-line-length: https://github.com/psf/black#line-length
+max-line-length = 80
