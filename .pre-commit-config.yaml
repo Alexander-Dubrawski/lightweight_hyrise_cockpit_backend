@@ -52,9 +52,3 @@ repos:
       types: [python]
       require_serial: true
       additional_dependencies: []
-    - id: pydocstyle
-      name: Running pydocstyle on python files
-      description: 'pydocstyle is a static analysis tool for checking compliance with Python docstring conventions.'
-      entry: pipenv run pydocstyle
-      language: system
-      types: [python]

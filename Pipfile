@@ -16,6 +16,8 @@ flask = "*"
 flask-cors = "*"
 flask-restx = "*"
 python-dotenv = "*"
+flask-accepts = "*"
+marshmallow = "*"
 
 [requires]
 python_version = "3.8"
