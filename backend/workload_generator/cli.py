@@ -1,5 +1,5 @@
 """CLI used to start the workload generator."""
-from hyrisecockpit.settings import (
+from backend.settings import (
     GENERATOR_LISTENING,
     GENERATOR_PORT,
     WORKLOAD_LISTENING,
@@ -24,3 +24,7 @@ def main() -> None:
             workload_generator.start()
     except KeyboardInterrupt:
         print("Workload Generator closed.")
+
+
+if __name__ == "__main__":
+    main()

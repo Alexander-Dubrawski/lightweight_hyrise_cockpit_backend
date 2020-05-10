@@ -26,12 +26,11 @@ class WorkloadController(Resource):
 
     @accepts(schema=WorkloadSchema, api=api)
     @responds(schema=WorkloadSchema, api=api)
-    def post(self) -> Workload:
+    def post(self) -> Response:
         """Create a Workload."""
         interface: WorkloadInterface = request.parsed_obj
-        return WorkloadService.create(interface)
+        return Response(status=WorkloadService.create(interface))
 
-    @accepts(schema=WorkloadSchema, api=api)
     def delete(self) -> Response:
         """Delete a Workload."""
-        return Response(status=200)
+        return Response(status=WorkloadService.delete())

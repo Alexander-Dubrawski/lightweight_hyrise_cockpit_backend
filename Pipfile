@@ -18,6 +18,8 @@ flask-restx = "*"
 python-dotenv = "*"
 flask-accepts = "*"
 marshmallow = "*"
+pyzmq = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.8"

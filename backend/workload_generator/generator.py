@@ -7,10 +7,11 @@ from types import TracebackType
 from typing import Dict, Optional, Type
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from zmq import PUB, Context
+
 from backend.request import Body
 from backend.response import Response, get_response
 from backend.server import Server
-from zmq import PUB, Context
 
 
 class WorkloadGenerator(object):
@@ -70,7 +71,7 @@ class WorkloadGenerator(object):
         self._workload_frequency = body["frequency"]
         return get_response(200)
 
-    def _call_stop_workload(self) -> Response:
+    def _call_stop_workload(self, body: Body) -> Response:
         self._workload = None  # type: ignore
         self._workload_frequency = 0
         return get_response(200)
@@ -83,7 +84,7 @@ class WorkloadGenerator(object):
             ]
             self._pub_socket.send_json(response)
 
-    def _call_get_workload(self) -> Response:
+    def _call_get_workload(self, body: Body) -> Response:
         response = get_response(200)
         response["body"]["workload"] = {
             "workload_name": self._workload,
