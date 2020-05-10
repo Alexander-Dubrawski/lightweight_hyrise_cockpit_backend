@@ -12,6 +12,10 @@ mypy = "*"
 pydocstyle = "*"
 
 [packages]
+flask = "*"
+flask-cors = "*"
+flask-restx = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.8"
