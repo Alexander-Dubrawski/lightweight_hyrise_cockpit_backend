@@ -128,7 +128,7 @@ class DatabaseService:
 
     @classmethod
     def get_storage(cls) -> List[Dict]:
-        """Execute sql query."""
+        """Get storage information from databases."""
         databases = DatabaseService.get_databases()
         # Do some work (access inluxDB)
         sleep(0.001)
@@ -140,3 +140,11 @@ class DatabaseService:
             {"id": database.id, "results": fake_storage_information}
             for database in databases
         ]
+
+    @classmethod
+    def get_throughput(cls) -> List[Dict]:
+        """Get throughput from databases."""
+        databases = DatabaseService.get_databases()
+        # Do some work (access inluxDB)
+        sleep(0.001)
+        return [{"id": database.id, "throughput": 42} for database in databases]

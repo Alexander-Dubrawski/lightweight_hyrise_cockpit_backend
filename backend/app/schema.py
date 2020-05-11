@@ -139,3 +139,20 @@ class StorageSchema(Schema):
     results = Dict(
         title="Storage information", description="Storage usage.", required=True,
     )
+
+
+class ThroughputSchema(Schema):
+    """Schema of a throughput response."""
+
+    id = String(
+        title="Database ID",
+        description="Used to identify a database.",
+        required=True,
+        example="hyrise-1",
+    )
+    throughput = Integer(
+        title="Throughput information",
+        description="Throughput of the last second.",
+        required=True,
+        example=200,
+    )

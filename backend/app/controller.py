@@ -1,5 +1,5 @@
 """CLI used to start the backend API."""
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from flask import Flask, request
 from flask.wrappers import Response
@@ -21,6 +21,7 @@ from .schema import (
     SqlResponseSchema,
     StatusSchema,
     StorageSchema,
+    ThroughputSchema,
     WorkloadSchema,
 )
 from .service import DatabaseService, WorkloadService
@@ -128,6 +129,16 @@ class StorgaeController(Resource):
     """Return storage information of database."""
 
     @responds(schema=StorageSchema(many=True), api=api)
-    def get(self) -> List[Status]:
+    def get(self) -> List[Dict]:
         """Return storage information for all databases."""
         return DatabaseService.get_storage()
+
+
+@api.route("/throughput")
+class ThroughputController(Resource):
+    """Return throughput information of database."""
+
+    @responds(schema=ThroughputSchema(many=True), api=api)
+    def get(self) -> List[Dict]:
+        """Return throughput information for all databases."""
+        return DatabaseService.get_throughput()
