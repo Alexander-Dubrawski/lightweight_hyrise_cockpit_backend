@@ -3,23 +3,18 @@
 Used by Database Manager and Workload Generator.
 """
 
-from typing import Callable, Dict, Optional, Tuple
+from typing import Dict
 
-from backend.request import Body, Request
-from backend.response import Response, get_response
 from zmq import REP, Context
+
+from backend.request import Request
+from backend.response import Response, get_response
 
 
 class Server:
     """Server component handling zmq requests."""
 
-    def __init__(
-        self,
-        host: str,
-        port: str,
-        calls: Dict[str, Tuple[Callable[[Body], Response], Optional[Dict]]],
-        io_threads: int = 1,
-    ) -> None:
+    def __init__(self, host: str, port: str, calls: Dict, io_threads: int = 1,) -> None:
         """Initialize a Server with a host, port and calls."""
         self._calls = calls
         self._host = host
@@ -40,7 +35,7 @@ class Server:
 
     def _handle_request(self, request: Request) -> Response:
         try:
-            func, schema = self._calls[request["header"]["message"]]
+            func = self._calls[request["header"]["message"]]
             return func(request["body"])
         except KeyError:
             return get_response(404)

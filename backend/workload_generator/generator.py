@@ -28,9 +28,9 @@ class WorkloadGenerator(object):
         self._workload_listening = workload_listening
         self._workload_pub_port = workload_pub_port
         server_calls: Dict = {
-            "start workload": (self._call_start_workload, None,),
-            "get workload": (self._call_get_workload, None),
-            "stop workload": (self._call_stop_workload, None),
+            "start workload": self._call_start_workload,
+            "get workload": self._call_get_workload,
+            "stop workload": self._call_stop_workload,
         }
         self._server = Server(generator_listening, generator_port, server_calls)
         self._workload: str = None  # type: ignore
