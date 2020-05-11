@@ -17,6 +17,7 @@ from .model import DetailedDatabase, SqlResponse, Status, Workload
 from .schema import (
     DatabaseSchema,
     DetailedDatabaseSchema,
+    LatencySchema,
     SqlQuerySchema,
     SqlResponseSchema,
     StatusSchema,
@@ -142,3 +143,13 @@ class ThroughputController(Resource):
     def get(self) -> List[Dict]:
         """Return throughput information for all databases."""
         return DatabaseService.get_throughput()
+
+
+@api.route("/latency")
+class LatencyController(Resource):
+    """Return throughput information of database."""
+
+    @responds(schema=LatencySchema(many=True), api=api)
+    def get(self) -> List[Dict]:
+        """Return throughput information for all databases."""
+        return DatabaseService.get_latency()

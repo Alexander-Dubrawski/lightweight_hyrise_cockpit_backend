@@ -1,7 +1,7 @@
 """Schema for back-end api."""
 
 from marshmallow import Schema, post_load
-from marshmallow.fields import Dict, Integer, List, String
+from marshmallow.fields import Dict, Float, Integer, List, String
 
 from .model import Database, DetailedDatabase, SqlQuery, SqlResponse
 
@@ -155,4 +155,21 @@ class ThroughputSchema(Schema):
         description="Throughput of the last second.",
         required=True,
         example=200,
+    )
+
+
+class LatencySchema(Schema):
+    """Schema of a latency response."""
+
+    id = String(
+        title="Database ID",
+        description="Used to identify a database.",
+        required=True,
+        example="hyrise-1",
+    )
+    latency = Float(
+        title="Latency information",
+        description="Latency of the last second.",
+        required=True,
+        example=0.1,
     )

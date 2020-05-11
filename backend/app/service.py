@@ -148,3 +148,11 @@ class DatabaseService:
         # Do some work (access inluxDB)
         sleep(0.001)
         return [{"id": database.id, "throughput": 42} for database in databases]
+
+    @classmethod
+    def get_latency(cls) -> List[Dict]:
+        """Get latency from databases."""
+        databases = DatabaseService.get_databases()
+        # Do some work (access inluxDB)
+        sleep(0.001)
+        return [{"id": database.id, "latency": 0.2} for database in databases]
