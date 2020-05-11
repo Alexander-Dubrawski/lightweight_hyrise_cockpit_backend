@@ -63,3 +63,20 @@ class DetailedDatabaseSchema(Schema):
     def make_detailed_database(self, data, **kwargs):
         """Return detailed database object."""
         return DetailedDatabase(**data)
+
+
+class StatusSchema(Schema):
+    """Schema of a status."""
+
+    id = String(
+        title="Database ID",
+        description="Used to identify a database.",
+        required=True,
+        example="hyrise-1",
+    )
+    worker_pool_status = String(
+        title="Worker pool status",
+        description="Status of worker pool",
+        required=True,
+        example="running",
+    )

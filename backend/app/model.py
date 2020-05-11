@@ -29,3 +29,12 @@ class DetailedDatabase:
         self.host: str = host
         self.port: str = port
         self.number_workers: int = number_workers
+
+
+class Status:
+    """Model of a status."""
+
+    def __init__(self, id: str, worker_pool_status: str):
+        """Initialize a status model."""
+        self.id: str = id
+        self.worker_pool_status: str = worker_pool_status

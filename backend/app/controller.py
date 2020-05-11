@@ -8,8 +8,8 @@ from flask_cors import CORS
 from flask_restx import Api, Resource
 
 from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
-from .model import DetailedDatabase, Workload
-from .schema import DatabaseSchema, DetailedDatabaseSchema, WorkloadSchema
+from .model import DetailedDatabase, Status, Workload
+from .schema import DatabaseSchema, DetailedDatabaseSchema, StatusSchema, WorkloadSchema
 from .service import DatabaseService, WorkloadService
 
 app = Flask(__name__)
@@ -80,3 +80,13 @@ class WorkerController(Resource):
         """Start worker pool for all databases."""
         status_code = DatabaseService.close_worker_pool()
         return Response(status=status_code)
+
+
+@api.route("/status")
+class StatusController(Resource):
+    """Manage status of all databases."""
+
+    @responds(schema=StatusSchema(many=True), api=api)
+    def get(self) -> List[Status]:
+        """Return status for all databases."""
+        return DatabaseService.get_status()

@@ -5,7 +5,7 @@ from backend.request import Header, Request
 from backend.response import Response
 
 from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
-from .model import DetailedDatabase, Workload
+from .model import DetailedDatabase, Status, Workload
 from .socket_manager import GeneratorSocket, ManagerSocket
 
 
@@ -98,3 +98,11 @@ class DatabaseService:
             Request(header=Header(message="close worker"), body={})
         )
         return response["header"]["status"]
+
+    @classmethod
+    def get_status(cls) -> List[Status]:
+        """Close worker pool."""
+        response = cls._send_message_to_dbm(
+            Request(header=Header(message="status"), body={})
+        )
+        return [Status(**interface) for interface in response["body"]["status"]]
