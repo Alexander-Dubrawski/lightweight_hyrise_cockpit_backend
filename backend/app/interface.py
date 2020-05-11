@@ -8,3 +8,20 @@ class WorkloadInterface(TypedDict):
 
     workload_name: str
     frequency: int
+
+
+class DatabaseInterface(TypedDict):
+    """Interface of a Database."""
+
+    id: str
+
+
+class DetailedDatabaseInterface(DatabaseInterface):
+    """Interface of a detailed database."""
+
+    host: str
+    port: str
+    number_workers: int
+    dbname: str
+    user: str
+    password: str

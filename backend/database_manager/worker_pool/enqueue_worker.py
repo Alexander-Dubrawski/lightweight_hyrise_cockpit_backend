@@ -13,7 +13,7 @@ def handle_published_data(published_data: Dict, task_queue: Queue) -> None:
         task_queue.put(task)
 
 
-def fill_queue(
+def enqueue_worker(
     workload_publisher_url: str,
     task_queue: Queue,
     continue_execution_flag: Value,

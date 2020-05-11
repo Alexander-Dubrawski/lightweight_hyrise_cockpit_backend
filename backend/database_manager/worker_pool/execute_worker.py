@@ -5,7 +5,7 @@ from queue import Empty
 from time import sleep
 
 
-def execute_queries(
+def execute_worker(
     task_queue: Queue,
     continue_execution_flag: Value,
     i_am_done_event: EventType,

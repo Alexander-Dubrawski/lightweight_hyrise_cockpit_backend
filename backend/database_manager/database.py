@@ -2,7 +2,7 @@
 from typing import Dict, List
 
 from .background_scheduler import BackgroundJobManager
-from .worker_pool import WorkerPool
+from .worker_pool.pool import WorkerPool
 
 
 class Database(object):
