@@ -20,6 +20,7 @@ from .schema import (
     SqlQuerySchema,
     SqlResponseSchema,
     StatusSchema,
+    StorageSchema,
     WorkloadSchema,
 )
 from .service import DatabaseService, WorkloadService
@@ -105,7 +106,7 @@ class StatusController(Resource):
 
 
 @api.route("/sql")
-class Sql(Resource):
+class SqlController(Resource):
     """Execute SQL query on database."""
 
     @api.response(404, "Database not found.")
@@ -120,3 +121,13 @@ class Sql(Resource):
         if status_code == 200:
             return response
         return Response(status=status_code)
+
+
+@api.route("/storage")
+class StorgaeController(Resource):
+    """Return storage information of database."""
+
+    @responds(schema=StorageSchema(many=True), api=api)
+    def get(self) -> List[Status]:
+        """Return storage information for all databases."""
+        return DatabaseService.get_storage()

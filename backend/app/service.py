@@ -1,5 +1,6 @@
 """Service for back-end api."""
-from typing import List, Tuple
+from time import sleep
+from typing import Dict, List, Tuple
 
 from backend.request import Header, Request
 from backend.response import Response
@@ -124,3 +125,18 @@ class DatabaseService:
                 200,
             )
         return response["header"]["status"]
+
+    @classmethod
+    def get_storage(cls) -> List[Dict]:
+        """Execute sql query."""
+        databases = DatabaseService.get_databases()
+        # Do some work (access inluxDB)
+        sleep(0.001)
+        fake_storage_information = {
+            "customer": {"size": 10000, "number_columns": 2},
+            "supplier": {"size": 400, "number_columns": 1},
+        }
+        return [
+            {"id": database.id, "results": fake_storage_information}
+            for database in databases
+        ]

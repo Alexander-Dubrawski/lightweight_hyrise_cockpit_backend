@@ -1,7 +1,7 @@
 """Schema for back-end api."""
 
 from marshmallow import Schema, post_load
-from marshmallow.fields import Integer, List, String
+from marshmallow.fields import Dict, Integer, List, String
 
 from .model import Database, DetailedDatabase, SqlQuery, SqlResponse
 
@@ -125,3 +125,17 @@ class SqlResponseSchema(Schema):
     def make_sql_query(self, data, **kwargs):
         """Return SqlResponse object."""
         return SqlResponse(**data)
+
+
+class StorageSchema(Schema):
+    """Schema of a storage response."""
+
+    id = String(
+        title="Database ID",
+        description="Used to identify a database.",
+        required=True,
+        example="hyrise-1",
+    )
+    results = Dict(
+        title="Storage information", description="Storage usage.", required=True,
+    )
