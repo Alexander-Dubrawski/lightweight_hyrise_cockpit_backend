@@ -41,7 +41,6 @@ class WorkerPool:
                 args=(
                     self._task_queue,
                     self._continue_execution_flag,
-                    self._database_id,
                     self._execute_task_worker_done_event[i],
                     self._worker_wait_for_exit_event,
                 ),

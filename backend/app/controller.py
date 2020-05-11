@@ -65,3 +65,18 @@ class DatabasesController(Resource):
         interface: DatabaseInterface = DatabaseInterface(id=request.parsed_obj.id)
         status_code = DatabaseService.deregister_database(interface)
         return Response(status=status_code)
+
+
+@api.route("/worker")
+class WorkerController(Resource):
+    """Manage start and stop of worker pool at all databases."""
+
+    def post(self) -> Response:
+        """Start worker pool for all databases."""
+        status_code = DatabaseService.start_worker_pool()
+        return Response(status=status_code)
+
+    def delete(self) -> Response:
+        """Start worker pool for all databases."""
+        status_code = DatabaseService.close_worker_pool()
+        return Response(status=status_code)
