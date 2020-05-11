@@ -26,9 +26,7 @@ class Database(object):
         self._worker_pool: WorkerPool = WorkerPool(
             self.number_workers, self._id, workload_publisher_url,
         )
-        self._background_scheduler: BackgroundJobManager = BackgroundJobManager(
-            self._id, self._worker_pool,
-        )
+        self._background_scheduler: BackgroundJobManager = BackgroundJobManager()
         self._background_scheduler.start()
 
     def get_queue_length(self) -> int:
