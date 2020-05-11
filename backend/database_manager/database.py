@@ -1,5 +1,5 @@
 """The database object represents the instance of a database."""
-from typing import Dict, List
+from typing import Dict
 
 from .background_scheduler import BackgroundJobManager
 from .worker_pool.pool import WorkerPool
@@ -45,9 +45,9 @@ class Database(object):
         """Close worker."""
         return self._worker_pool.close()
 
-    def execute_sql_query(self, query) -> List:
+    def execute_sql_query(self, query) -> Dict:
         """Execute sql query on database."""
-        return [("42",)]
+        return {"id": self._id, "results": [["42", "foo"], ["Hallo", "World"]]}
 
     def close(self) -> None:
         """Close the database."""

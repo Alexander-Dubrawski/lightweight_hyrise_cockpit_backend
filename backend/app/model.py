@@ -1,5 +1,7 @@
 """Model for back-end api."""
 
+from typing import List
+
 
 class Workload:
     """Model of a Workload."""
@@ -38,3 +40,23 @@ class Status:
         """Initialize a status model."""
         self.id: str = id
         self.worker_pool_status: str = worker_pool_status
+
+
+class SqlQuery:
+    """Model of a sql query."""
+
+    def __init__(self, id: str, query: str):
+        """Initialize a sql query model."""
+        self.id: str = id
+        self.query: str = query
+
+
+class SqlResponse:
+    """Model of a sql query response."""
+
+    def __init__(
+        self, id: str, results: List[List[str]],
+    ):
+        """Initialize a sql response model."""
+        self.id: str = id
+        self.results: List[List[str]] = results

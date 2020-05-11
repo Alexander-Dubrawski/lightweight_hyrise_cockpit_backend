@@ -1,5 +1,5 @@
 """CLI used to start the backend API."""
-from typing import List
+from typing import List, Optional, Union
 
 from flask import Flask, request
 from flask.wrappers import Response
@@ -7,9 +7,21 @@ from flask_accepts import accepts, responds
 from flask_cors import CORS
 from flask_restx import Api, Resource
 
-from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
-from .model import DetailedDatabase, Status, Workload
-from .schema import DatabaseSchema, DetailedDatabaseSchema, StatusSchema, WorkloadSchema
+from .interface import (
+    DatabaseInterface,
+    DetailedDatabaseInterface,
+    SqlQueryInterface,
+    WorkloadInterface,
+)
+from .model import DetailedDatabase, SqlResponse, Status, Workload
+from .schema import (
+    DatabaseSchema,
+    DetailedDatabaseSchema,
+    SqlQuerySchema,
+    SqlResponseSchema,
+    StatusSchema,
+    WorkloadSchema,
+)
 from .service import DatabaseService, WorkloadService
 
 app = Flask(__name__)
@@ -90,3 +102,21 @@ class StatusController(Resource):
     def get(self) -> List[Status]:
         """Return status for all databases."""
         return DatabaseService.get_status()
+
+
+@api.route("/sql")
+class Sql(Resource):
+    """Execute SQL query on database."""
+
+    @api.response(404, "Database not found.")
+    @accepts(schema=SqlQuerySchema, api=api)
+    @responds(schema=SqlResponseSchema, api=api)
+    def post(self) -> Union[Optional[Response], SqlResponse]:
+        """Execute SQL query."""
+        interface: SqlQueryInterface = SqlQueryInterface(
+            id=request.parsed_obj.id, query=request.parsed_obj.query
+        )
+        response, status_code = DatabaseService.execute_sql(interface)
+        if status_code == 200:
+            return response
+        return Response(status=status_code)

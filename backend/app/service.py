@@ -1,11 +1,16 @@
 """Service for back-end api."""
-from typing import List
+from typing import List, Tuple
 
 from backend.request import Header, Request
 from backend.response import Response
 
-from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
-from .model import DetailedDatabase, Status, Workload
+from .interface import (
+    DatabaseInterface,
+    DetailedDatabaseInterface,
+    SqlQueryInterface,
+    WorkloadInterface,
+)
+from .model import DetailedDatabase, SqlResponse, Status, Workload
 from .socket_manager import GeneratorSocket, ManagerSocket
 
 
@@ -106,3 +111,16 @@ class DatabaseService:
             Request(header=Header(message="status"), body={})
         )
         return [Status(**interface) for interface in response["body"]["status"]]
+
+    @classmethod
+    def execute_sql(cls, interface: SqlQueryInterface) -> Tuple:
+        """Execute sql query."""
+        response = cls._send_message_to_dbm(
+            Request(header=Header(message="execute sql query"), body=dict(interface))
+        )
+        if response["header"]["status"] == 200:
+            return (
+                SqlResponse(**response["body"]["results"]),
+                200,
+            )
+        return response["header"]["status"]
