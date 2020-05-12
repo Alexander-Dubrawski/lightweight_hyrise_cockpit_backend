@@ -173,3 +173,20 @@ class LatencySchema(Schema):
         required=True,
         example=0.1,
     )
+
+
+class QueueLengthSchema(Schema):
+    """Schema of a queue length response."""
+
+    id = String(
+        title="Database ID",
+        description="Used to identify a database.",
+        required=True,
+        example="hyrise-1",
+    )
+    queue_length = Integer(
+        title="Queue length",
+        description="Number of elements in queue.",
+        required=True,
+        example=500,
+    )

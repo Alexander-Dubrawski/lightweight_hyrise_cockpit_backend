@@ -11,7 +11,7 @@ from .interface import (
     SqlQueryInterface,
     WorkloadInterface,
 )
-from .model import DetailedDatabase, SqlResponse, Status, Workload
+from .model import DetailedDatabase, QueueLength, SqlResponse, Status, Workload
 from .socket_manager import GeneratorSocket, ManagerSocket
 
 
@@ -156,3 +156,11 @@ class DatabaseService:
         # Do some work (access inluxDB)
         sleep(0.001)
         return [{"id": database.id, "latency": 0.2} for database in databases]
+
+    @classmethod
+    def get_queue_length(cls) -> List[QueueLength]:
+        """Get queue length from databases."""
+        response = cls._send_message_to_dbm(
+            Request(header=Header(message="get queue length"), body={})
+        )
+        return [QueueLength(**interface) for interface in response["body"]["databases"]]

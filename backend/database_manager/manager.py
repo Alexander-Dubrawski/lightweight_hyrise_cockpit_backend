@@ -50,6 +50,7 @@ class DatabaseManager(object):
             "start worker": self._call_start_worker,
             "close worker": self._call_close_worker,
             "get databases": self._call_get_databases,
+            "get queue length": self._call_get_queue_length,
             "status": self._call_status,
             "execute sql query": self._call_execute_sql_query,
         }
@@ -130,6 +131,14 @@ class DatabaseManager(object):
         results = self._databases[database_id].execute_sql_query(query)
         response = get_response(200)
         response["body"]["results"] = results
+        return response
+
+    def _call_get_queue_length(self, body: Body) -> Response:
+        response = get_response(200)
+        response["body"]["databases"] = [
+            {"id": id, "queue_length": database.get_queue_length()}
+            for id, database in self._databases.items()
+        ]
         return response
 
     def start(self) -> None:

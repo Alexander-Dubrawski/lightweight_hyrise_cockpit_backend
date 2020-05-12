@@ -60,3 +60,14 @@ class SqlResponse:
         """Initialize a sql response model."""
         self.id: str = id
         self.results: List[List[str]] = results
+
+
+class QueueLength:
+    """Model of a queue length response."""
+
+    def __init__(
+        self, id: str, queue_length: int,
+    ):
+        """Initialize a queue length response model."""
+        self.id: str = id
+        self.queue_length: int = queue_length

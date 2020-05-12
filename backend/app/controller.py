@@ -13,11 +13,12 @@ from .interface import (
     SqlQueryInterface,
     WorkloadInterface,
 )
-from .model import DetailedDatabase, SqlResponse, Status, Workload
+from .model import DetailedDatabase, QueueLength, SqlResponse, Status, Workload
 from .schema import (
     DatabaseSchema,
     DetailedDatabaseSchema,
     LatencySchema,
+    QueueLengthSchema,
     SqlQuerySchema,
     SqlResponseSchema,
     StatusSchema,
@@ -153,3 +154,13 @@ class LatencyController(Resource):
     def get(self) -> List[Dict]:
         """Return throughput information for all databases."""
         return DatabaseService.get_latency()
+
+
+@api.route("/queue_length")
+class QueueLengthController(Resource):
+    """Return Queue length of database."""
+
+    @responds(schema=QueueLengthSchema(many=True), api=api)
+    def get(self) -> List[QueueLength]:
+        """Return throughput information for all databases."""
+        return DatabaseService.get_queue_length()
