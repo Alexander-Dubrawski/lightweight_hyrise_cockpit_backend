@@ -1,7 +1,7 @@
 """Tool for executing wrk benchmark in multiple processes."""
 
-import subprocess  # nosec
 from multiprocessing import Process
+from subprocess import run  # nosec
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
@@ -12,7 +12,7 @@ ENDPOINTS = ["worklaod", "database", "queue_length", "storage", "throughput", "l
 
 def wrk_background_process(url):
     """Background process to execute wrk."""
-    sub_process = subprocess.run(  # nosec
+    sub_process = run(  # nosec
         ["wrk", "-t1", "-c1", f"-d{DURATION_IN_SECOUNDS}s", f"{url}"],
         capture_output=True,
     )
