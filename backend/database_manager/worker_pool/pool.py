@@ -3,8 +3,6 @@ from multiprocessing import Event, Process, Value
 from multiprocessing.synchronize import Event as EventType
 from typing import List, Optional
 
-from apscheduler.schedulers.background import BackgroundScheduler
-
 from backend.cross_platform_support.multiprocessing_support import Queue
 
 from .enqueue_worker import enqueue_worker
@@ -28,8 +26,6 @@ class WorkerPool:
         self._enqueue_worker: Optional[Process] = None
         self._worker_wait_for_exit_event: EventType = Event()
         self._task_queue: Queue = Queue(0)
-        self._scheduler: BackgroundScheduler = BackgroundScheduler()
-        self._scheduler.start()
 
     def _generate_execute_worker_done_events(self) -> List[EventType]:
         return [Event() for _ in range(self._number_worker)]
@@ -102,12 +98,12 @@ class WorkerPool:
 
     def start(self) -> bool:
         """Start worker."""
-        self._scheduler.add_job(func=self._start_job)
+        self._start_job()
         return True
 
     def close(self) -> bool:
         """Close worker."""
-        self._scheduler.add_job(func=self._close_job)
+        self._close_job()
         return True
 
     def terminate(self) -> bool:
