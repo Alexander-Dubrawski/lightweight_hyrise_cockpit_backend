@@ -17,7 +17,7 @@ def add_database(self, database_id: str):
         "id": database_id,
         "host": "host",
         "port": "port",
-        "number_workers": 8,
+        "number_workers": 10,
     }
     url = f"{BACKEND_URL}/database"
     return post(url, json=body)
