@@ -1,5 +1,6 @@
 """Tool for executing curl on endpoint."""
 
+from benchmark_tools.graph_plotter import plot_avg_med_bar_chart
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
     delete_database,
@@ -113,6 +114,7 @@ def get_enpoint_request():
     results = get_endpoints()
     for endpoint, result in results.items():
         print_data(endpoint, result)
+    plot_avg_med_bar_chart(results, "latency_get_endpoints", "server_process_times")
 
 
 def add_delete_database():
