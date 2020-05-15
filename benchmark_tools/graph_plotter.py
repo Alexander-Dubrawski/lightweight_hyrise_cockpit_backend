@@ -12,7 +12,8 @@ def interpolate(data, steps):
     for i in range(0, len(data), steps):
         x_values.append(mean(data[i : i + steps]))
         y_values.append(i)
-    return (x_values, y_values)
+    rounded_x_values = [round(value * 1000, 4) for value in x_values]
+    return (rounded_x_values, y_values)
 
 
 def plot_line_chart(data, file_name):
@@ -21,14 +22,13 @@ def plot_line_chart(data, file_name):
     col_labels = []
     figure(num=None, figsize=(12, 6), dpi=80, facecolor="w", edgecolor="k")
     for key, values in data.items():
-        values.remove(max(values))
         avg_values.append(f"{round(mean(values) * 1_000, 4)}ms")
         med_values.append(f"{round(median(values) * 1_000, 4)}ms")
         x_values, y_values = interpolate(values, 50)
         plt.plot(y_values, x_values, label=key)
         col_labels.append(key)
 
-    plt.legend(loc="upper left")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel("time ms")
     plt.xlabel("runs")
     plt.title("Server Processing Latency")

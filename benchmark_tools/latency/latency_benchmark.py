@@ -12,7 +12,7 @@ from benchmark_tools.latency.curl_wrapper import (
     stop_workload,
 )
 
-RUNS = 101
+RUNS = 100
 
 GET_ENDPOINTS = [
     "workload",

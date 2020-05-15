@@ -1,5 +1,5 @@
 """Tool for executing user scenario latency benchmark."""
-from multiprocessing import Process
+from multiprocessing import Manager, Process
 from statistics import mean, median
 
 from benchmark_tools.graph_plotter import plot_line_chart
@@ -38,25 +38,31 @@ def fetch_endpoints_sequenzial():
     return benchamrk_results
 
 
-def fetch_endpoint(endpoint):
+def fetch_endpoint(endpoint, shared_data):
     server_process_times = []
     for _ in range(RUNS):
         results = execute_get(endpoint)
         server_process_times.append(results["total"] - results["pretransfer"])
+    shared_data[endpoint] = server_process_times
     avg = mean(server_process_times) * 1_000
     med = median(server_process_times) * 1_000
     print(f"Run on {endpoint}\nAvg: {avg}\nMedian: {med}")
 
 
 def fetch_endpoints_parrallel():
+    manager = Manager()
+    shared_data = manager.dict()
     processes = [
-        Process(target=fetch_endpoint, args=(endpoint,)) for endpoint in GET_ENDPOINTS
+        Process(target=fetch_endpoint, args=(endpoint, shared_data,))
+        for endpoint in GET_ENDPOINTS
     ]
     for process in processes:
         process.start()
     for process in processes:
         process.join()
         process.terminate()
+
+    return shared_data
 
 
 def run_benchmark():
@@ -77,9 +83,8 @@ def run_benchmark():
     print("Run start worker")
     print(f"Latency: {(result['total'] - result['pretransfer']) * 1_000}ms")
 
-    # Establish connection
     plot_line_chart(fetch_endpoints_sequenzial(), "Latency_squenzial")
-    fetch_endpoints_parrallel()
+    plot_line_chart(fetch_endpoints_parrallel(), "Latency_parallel")
 
     result = stop_worker()
     print("Run stop worker")
