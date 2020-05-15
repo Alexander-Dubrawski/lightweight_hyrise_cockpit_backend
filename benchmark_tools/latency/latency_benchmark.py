@@ -121,23 +121,27 @@ def add_delete_database():
     result = post_delete_on_endpoint("Database", add_database, delete_database, "db")
     print_data("Add Database", result["Post Database"])
     print_data("Delete Database", result["Delete Database"])
+    plot_avg_med_bar_chart(result, "add_delete_database", "server_process_times")
 
 
 def start_stop_worker():
     result = post_delete_on_endpoint("Worker", start_worker, stop_worker)
     print_data("Start Worker", result["Post Worker"])
     print_data("Stop Worker", result["Delete Worker"])
+    plot_avg_med_bar_chart(result, "start_stop_worker", "server_process_times")
 
 
 def start_stop_workload():
     result = post_delete_on_endpoint("Workload", start_workload, stop_workload)
     print_data("Start Workload", result["Post Workload"])
     print_data("Stop Workload", result["Delete Workload"])
+    plot_avg_med_bar_chart(result, "start_stop_workload", "server_process_times")
 
 
 def post_to_sql_endpoint():
     result = execute_sql()
     print_data("Execute sql", result)
+    plot_avg_med_bar_chart({"sql": result}, "start_stop_worker", "server_process_times")
 
 
 def run_benchmark():
