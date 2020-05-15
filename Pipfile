@@ -20,6 +20,8 @@ flask-accepts = "*"
 marshmallow = "*"
 pyzmq = "*"
 apscheduler = "*"
+matplotlib = "*"
+scipy = "1.2.1"
 
 [requires]
 python_version = "3.8"

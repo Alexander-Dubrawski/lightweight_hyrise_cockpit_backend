@@ -2,6 +2,7 @@
 from multiprocessing import Process
 from statistics import mean, median
 
+from benchmark_tools.graph_plotter import plot_line_chart
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
     delete_database,
@@ -12,7 +13,7 @@ from benchmark_tools.latency.curl_wrapper import (
     stop_workload,
 )
 
-RUNS = 100
+RUNS = 1000
 NUMBER_DATABASES = 5
 
 GET_ENDPOINTS = [
@@ -21,6 +22,20 @@ GET_ENDPOINTS = [
     "throughput",
     "latency",
 ]
+
+
+def fetch_endpoints_sequenzial():
+    benchamrk_results = {}
+    for endpoint in GET_ENDPOINTS:
+        print(f"Run on {endpoint}")
+        server_process_times = []
+        for _ in range(RUNS):
+            results = execute_get(endpoint)
+            server_process_times.append(results["total"] - results["pretransfer"])
+        benchamrk_results[endpoint] = server_process_times
+        print(f"Avg: {mean(server_process_times) * 1_000}ms")
+        print(f"Median: {median(server_process_times) * 1_000}ms")
+    return benchamrk_results
 
 
 def fetch_endpoint(endpoint):
@@ -62,6 +77,8 @@ def run_benchmark():
     print("Run start worker")
     print(f"Latency: {(result['total'] - result['pretransfer']) * 1_000}ms")
 
+    # Establish connection
+    plot_line_chart(fetch_endpoints_sequenzial(), "Latency_squenzial")
     fetch_endpoints_parrallel()
 
     result = stop_worker()
