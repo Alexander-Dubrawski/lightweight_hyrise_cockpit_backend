@@ -1,5 +1,4 @@
 """Tool for executing curl on endpoint."""
-from statistics import mean, median
 
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
@@ -11,6 +10,7 @@ from benchmark_tools.latency.curl_wrapper import (
     stop_worker,
     stop_workload,
 )
+from benchmark_tools.latency.print_data import print_data
 
 RUNS = 10
 
@@ -22,29 +22,6 @@ GET_ENDPOINTS = [
     "throughput",
     "latency",
 ]
-
-
-def print_green(value):
-    """Print green colored text."""
-    print("\033[92m{}\033[00m".format(value))
-
-
-def print_cyan(value):
-    """Print cyan colored text."""
-    print("\033[96m{}\033[00m".format(value))
-
-
-def print_data(endpoint, results):
-    print_green(f"\nResults for {endpoint}")
-    print_cyan("Server process time")
-    print(f"Avg: {mean(results['server_process_times']) * 1_000}ms")
-    print(f"Median: {median(results['server_process_times']) * 1_000}ms")
-    print_cyan("Name lookup time")
-    print(f"Avg: {mean(results['name_lookup_times']) * 1_000}ms")
-    print(f"Median: {median(results['name_lookup_times']) * 1_000}ms")
-    print_cyan("Connect time")
-    print(f"Avg: {mean(results['connect_times']) * 1_000}ms")
-    print(f"Median: {median(results['connect_times']) * 1_000}ms\n")
 
 
 def get_endpoints():
