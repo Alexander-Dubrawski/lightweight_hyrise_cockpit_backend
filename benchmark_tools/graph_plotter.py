@@ -16,22 +16,22 @@ def interpolate(data, steps):
     return (rounded_x_values, y_values)
 
 
-def plot_line_chart(data, file_name):
+def plot_line_chart(data, file_name, latency_type, interpolation_factor):
     avg_values = []
     med_values = []
     col_labels = []
     figure(num=None, figsize=(12, 6), dpi=80, facecolor="w", edgecolor="k")
     for key, values in data.items():
-        avg_values.append(f"{round(mean(values) * 1_000, 4)}ms")
-        med_values.append(f"{round(median(values) * 1_000, 4)}ms")
-        x_values, y_values = interpolate(values, 50)
+        avg_values.append(f"{round(mean(values[latency_type]) * 1_000, 4)}ms")
+        med_values.append(f"{round(median(values[latency_type]) * 1_000, 4)}ms")
+        x_values, y_values = interpolate(values[latency_type], interpolation_factor)
         plt.plot(y_values, x_values, label=key)
         col_labels.append(key)
 
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel("time ms")
     plt.xlabel("runs")
-    plt.title("Server Processing Latency")
+    plt.title(latency_type)
     row_labels = ["AVG", "MED"]
     rows = [avg_values, med_values]
     plt.table(

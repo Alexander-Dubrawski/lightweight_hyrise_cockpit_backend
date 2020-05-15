@@ -1,6 +1,7 @@
 """Tool for executing user scenario latency benchmark."""
 from multiprocessing import Manager, Process
 
+from benchmark_tools.graph_plotter import plot_line_chart
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
     delete_database,
@@ -12,7 +13,7 @@ from benchmark_tools.latency.curl_wrapper import (
 )
 from benchmark_tools.latency.print_data import print_data
 
-RUNS = 10
+RUNS = 200
 NUMBER_DATABASES = 2
 
 GET_ENDPOINTS = [
@@ -111,10 +112,16 @@ def run_benchmark():
     results = fetch_endpoints_sequenzial()
     for endpoint, result in results.items():
         print_data(endpoint, result)
+    plot_line_chart(
+        results, "sequenzial_latency", "server_process_times", interpolation_factor=10
+    )
 
     results = fetch_endpoints_parrallel()
     for endpoint, result in results.items():
         print_data(endpoint, result)
+    plot_line_chart(
+        results, "parallel_latency", "server_process_times", interpolation_factor=10
+    )
 
     result = post_data(stop_worker)
     print_data("Stop Worker", result)
