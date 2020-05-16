@@ -15,10 +15,10 @@ from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 NUMBER_DATABASES = 5
 DURATION_IN_SECOUNDS = 60
-ENDPOINTS = ["worklaod", "database", "queue_length", "storage", "throughput", "latency"]
+ENDPOINTS = ["workload", "database", "queue_length", "storage", "throughput", "latency"]
 
 
-def add_database(self, database_id: str):
+def add_database(database_id: str):
     """Add database."""
     body = {
         "id": database_id,
@@ -30,33 +30,33 @@ def add_database(self, database_id: str):
     return post(url, json=body)
 
 
-def remove_database(self, database_id: str):
+def remove_database(database_id: str):
     """Add database."""
     body = {"id": database_id}
     url = f"{BACKEND_URL}/database"
     return delete(url, json=body)
 
 
-def start_workload(self):
+def start_workload():
     """Start workload execution."""
     body = {"workload_name": "fake_workload", "frequency": 10000}
     url = f"{BACKEND_URL}/workload"
     return post(url, json=body)
 
 
-def stop_workload(self, workload_folder: str):
+def stop_workload():
     """Stop workload execution."""
     url = f"{BACKEND_URL}/workload"
     return delete(url)
 
 
-def start_workers(self):
+def start_workers():
     """Start worker pool."""
     url = f"{BACKEND_URL}/worker"
     return post(url)
 
 
-def stop_workers(self):
+def stop_workers():
     """Stop worker pool."""
     url = f"{BACKEND_URL}/worker"
     return delete(url)
@@ -129,27 +129,27 @@ def run_benchmark():
     for i in range(NUMBER_DATABASES):
         response = add_database(str(i))
         total_response_time = total_response_time + response.elapsed.total_seconds()
-    print(f"Avg time to add database: {total_response_time / NUMBER_DATABASES}")
+    print(f"\nAvg time to add database: {total_response_time / NUMBER_DATABASES}\n")
 
     response = start_workload()
-    print(f"Time to start workload: {response.elapsed.total_seconds()}")
+    print(f"Time to start workload: {response.elapsed.total_seconds()}\n")
 
     response = start_workers()
-    print(f"Time to start workers: {response.elapsed.total_seconds()}")
+    print(f"Time to start workers: {response.elapsed.total_seconds()}\n")
 
     run_wrk_benchmark(shared_data)
 
     response = stop_workers()
-    print(f"Time to stop workers: {response.elapsed.total_seconds()}")
+    print(f"Time to stop workers: {response.elapsed.total_seconds()}\n")
 
     response = stop_workload()
-    print(f"Time to stop workload: {response.elapsed.total_seconds()}")
+    print(f"Time to stop workload: {response.elapsed.total_seconds()}\n")
 
     total_response_time = 0
     for i in range(NUMBER_DATABASES):
         response = remove_database(str(i))
         total_response_time = total_response_time + response.elapsed.total_seconds()
-    print(f"Avg time to remove database: {total_response_time / NUMBER_DATABASES}")
+    print(f"Avg time to remove database: {total_response_time / NUMBER_DATABASES}\n")
 
     print_output(shared_data)
     formatted_reults = get_format_results(shared_data)
