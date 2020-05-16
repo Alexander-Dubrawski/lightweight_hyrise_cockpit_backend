@@ -1,5 +1,6 @@
 """Tool for executing curl on endpoint."""
 from calendar import timegm
+from csv import writer
 from datetime import datetime
 from os import mkdir
 from statistics import mean, median
@@ -22,7 +23,7 @@ from benchmark_tools.latency.curl_wrapper import (
 )
 from benchmark_tools.latency.print_data import print_data
 
-RUNS = 10
+RUNS = 100
 
 GET_ENDPOINTS = [
     "workload",
@@ -164,6 +165,25 @@ def create_folder():
     return path
 
 
+def write_to_csv(data, path):
+    latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
+    for latency_type in latency_types:
+        with open(f"{path}/{latency_type}/{latency_type}.csv", "w", newline="") as f:
+            endpoints = list(data.keys())
+            filednames = list(data.keys())
+            filednames.insert(0, "run")
+            csv_writer = writer(f, delimiter="|")
+            csv_writer.writerow(filednames)
+            rows = []
+            for i in range(RUNS):
+                row = []
+                row.append(i)
+                for endpoint in endpoints:
+                    row.append(data[endpoint][latency_type][i])
+                rows.append(row)
+            csv_writer.writerows(rows)
+
+
 def run_benchmark():
     """Run benchmark."""
     results_get_endpoints = benchmark_get_endpoints()
@@ -263,6 +283,7 @@ def run_benchmark():
         "avg_latency_distributio_without_database",
         mean,
     )
+    write_to_csv(results, main_path)
 
 
 if __name__ == "__main__":
