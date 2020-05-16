@@ -5,7 +5,11 @@ from os import mkdir
 from statistics import mean, median
 from time import gmtime
 
-from benchmark_tools.graph_plotter import plot_avg_med_bar_chart, plot_bar_chart
+from benchmark_tools.graph_plotter import (
+    plot_avg_med_bar_chart,
+    plot_bar_chart,
+    plot_stacked_bar_chart,
+)
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
     delete_database,
@@ -151,11 +155,12 @@ def benchmark_sql_endpoint():
 
 def create_folder():
     ts = timegm(gmtime())
-    path = f"measurements/{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
+    path = f"measurements/Latency_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
     mkdir(f"{path}/server_process_times")
     mkdir(f"{path}/name_lookup_times")
     mkdir(f"{path}/connect_times")
+    mkdir(f"{path}/stacked")
     return path
 
 
@@ -239,6 +244,25 @@ def run_benchmark():
             median,
             "MED",
         )
+
+    plot_stacked_bar_chart(
+        results, f"{main_path}/stacked", "med_latency_distributio", median
+    )
+    plot_stacked_bar_chart(
+        results_without_database_endpoint,
+        f"{main_path}/stacked",
+        "med_latency_distributio_without_database",
+        median,
+    )
+    plot_stacked_bar_chart(
+        results, f"{main_path}/stacked", "avg_latency_distributio", mean
+    )
+    plot_stacked_bar_chart(
+        results_without_database_endpoint,
+        f"{main_path}/stacked",
+        "avg_latency_distributio_without_database",
+        mean,
+    )
 
 
 if __name__ == "__main__":

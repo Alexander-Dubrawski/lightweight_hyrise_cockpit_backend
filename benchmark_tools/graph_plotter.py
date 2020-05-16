@@ -119,3 +119,55 @@ def plot_bar_chart(
     ts = timegm(gmtime())
     plt.savefig(f"{path}/{file_name}_{ts}.png")
     plt.close(fig)
+
+
+def plot_stacked_bar_chart(data, path, file_name, statistical_method):
+    endpoints = list(data.keys())
+    server_process_times = np.array(
+        [
+            round(statistical_method(data[endpoint]["server_process_times"]) * 1_000, 4)
+            for endpoint in endpoints
+        ]
+    )
+    name_lookup_times = np.array(
+        [
+            round(statistical_method(data[endpoint]["name_lookup_times"]) * 1_000, 4)
+            for endpoint in endpoints
+        ]
+    )
+    connect_times = np.array(
+        [
+            round(statistical_method(data[endpoint]["connect_times"]) * 1_000, 4)
+            for endpoint in endpoints
+        ]
+    )
+    ind = np.arange(len(endpoints))
+    width = 0.20
+    fig = figure(num=None, figsize=(32, 16), dpi=80, facecolor="w", edgecolor="k")
+    plt.bar(
+        ind,
+        server_process_times,
+        width,
+        label="server_process_times",
+        color="coral",
+        bottom=name_lookup_times + connect_times,
+    )
+    plt.bar(
+        ind,
+        connect_times,
+        width,
+        label="connect_times",
+        color="royalblue",
+        bottom=name_lookup_times,
+    )
+    plt.bar(
+        ind, name_lookup_times, width, label="name_lookup_times", color="lightslategrey"
+    )
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.xticks(ind + width / 2, endpoints)
+    plt.ylabel("time ms")
+    plt.title("Latency distribution per endpoint")
+
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.close(fig)
