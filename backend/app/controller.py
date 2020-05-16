@@ -1,5 +1,4 @@
 """CLI used to start the backend API."""
-from time import sleep
 from typing import Dict, List, Optional, Union
 
 from flask import Flask, request
@@ -74,7 +73,6 @@ class DatabasesController(Resource):
             number_workers=request.parsed_obj.number_workers,
         )
         status_code = DatabaseService.register_database(interface)
-        sleep(2)
         return Response(status=status_code)
 
     @accepts(schema=DatabaseSchema, api=api)

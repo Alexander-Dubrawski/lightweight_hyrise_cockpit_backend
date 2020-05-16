@@ -23,7 +23,7 @@ from benchmark_tools.latency.curl_wrapper import (
 )
 from benchmark_tools.latency.print_data import print_data
 
-RUNS = 100
+RUNS = 20
 
 GET_ENDPOINTS = [
     "workload",
@@ -201,12 +201,6 @@ def run_benchmark():
         **results_workload_endpoint,
         **{"POST sql": {**results_sql_endpoint}},
     }
-    results_without_database_endpoint = {
-        **results_get_endpoints,
-        **results_worker_endpoint,
-        **results_workload_endpoint,
-        **{"execute sql": {**results_sql_endpoint}},
-    }
 
     latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
 
@@ -248,40 +242,12 @@ def run_benchmark():
         plot_bar_chart(
             results, path, f"med_{latency_type}_latency", latency_type, median, "MED"
         )
-        plot_bar_chart(
-            results_without_database_endpoint,
-            path,
-            f"avg_{latency_type}_latency_without_database",
-            latency_type,
-            mean,
-            "AVG",
-        )
-        plot_bar_chart(
-            results_without_database_endpoint,
-            path,
-            f"med_{latency_type}_latency_without_database",
-            latency_type,
-            median,
-            "MED",
-        )
 
     plot_stacked_bar_chart(
         results, f"{main_path}/stacked", "med_latency_distribution", median
     )
     plot_stacked_bar_chart(
-        results_without_database_endpoint,
-        f"{main_path}/stacked",
-        "med_latency_distribution_without_database",
-        median,
-    )
-    plot_stacked_bar_chart(
         results, f"{main_path}/stacked", "avg_latency_distribution", mean
-    )
-    plot_stacked_bar_chart(
-        results_without_database_endpoint,
-        f"{main_path}/stacked",
-        "avg_latency_distribution_without_database",
-        mean,
     )
     write_to_csv(results, main_path)
 

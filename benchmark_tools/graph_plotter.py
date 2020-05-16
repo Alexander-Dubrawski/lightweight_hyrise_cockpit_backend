@@ -129,6 +129,31 @@ def plot_bar_chart(
     plt.close(fig)
 
 
+def plot_bar_chart_throughput(data, path, file_name):
+    endpoints = []
+    throughput_values = []
+    formatted_values = []
+    for key, value in data.items():
+        throughput_values.append(float(value))
+        formatted_values.append(f"{value}/sec")
+        endpoints.append(key)
+
+    x_pos = [i for i, _ in enumerate(endpoints)]
+    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
+    plt.bar(x_pos, throughput_values, label="Requests/sec")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.ylabel("Requests/sec")
+    plt.title("Throughput per endpoint")
+    plt.xticks(x_pos, endpoints)
+    row_labels = ["Requests/sec"]
+    rows = [formatted_values]
+    plot_matrix_sub_plot(row_labels, rows, endpoints)
+
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.close(fig)
+
+
 def plot_stacked_bar_chart(data, path, file_name, statistical_method):
     endpoints = list(data.keys())
     server_process_times = np.array(

@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 def update_queue_length():
     """Update queue length."""
     # Do some work
-    sleep(0.2)
+    sleep(0.1)
 
 
 def update_system_data():
