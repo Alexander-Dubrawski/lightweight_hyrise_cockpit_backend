@@ -266,21 +266,21 @@ def run_benchmark():
         )
 
     plot_stacked_bar_chart(
-        results, f"{main_path}/stacked", "med_latency_distributio", median
+        results, f"{main_path}/stacked", "med_latency_distribution", median
     )
     plot_stacked_bar_chart(
         results_without_database_endpoint,
         f"{main_path}/stacked",
-        "med_latency_distributio_without_database",
+        "med_latency_distribution_without_database",
         median,
     )
     plot_stacked_bar_chart(
-        results, f"{main_path}/stacked", "avg_latency_distributio", mean
+        results, f"{main_path}/stacked", "avg_latency_distribution", mean
     )
     plot_stacked_bar_chart(
         results_without_database_endpoint,
         f"{main_path}/stacked",
-        "avg_latency_distributio_without_database",
+        "avg_latency_distribution_without_database",
         mean,
     )
     write_to_csv(results, main_path)
