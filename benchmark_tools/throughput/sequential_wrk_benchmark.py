@@ -10,7 +10,7 @@ from benchmark_tools.graph_plotter import plot_bar_chart_throughput
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_SECOUNDS = 1
+DURATION_IN_SECOUNDS = 10
 ENDPOINTS = ["workload", "database", "queue_length", "storage", "throughput", "latency"]
 
 
