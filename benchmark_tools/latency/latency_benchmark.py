@@ -1,6 +1,11 @@
 """Tool for executing curl on endpoint."""
+from calendar import timegm
+from datetime import datetime
+from os import mkdir
+from statistics import mean, median
+from time import gmtime
 
-from benchmark_tools.graph_plotter import plot_avg_med_bar_chart
+from benchmark_tools.graph_plotter import plot_avg_med_bar_chart, plot_bar_chart
 from benchmark_tools.latency.curl_wrapper import (
     add_database,
     delete_database,
@@ -25,7 +30,7 @@ GET_ENDPOINTS = [
 ]
 
 
-def get_endpoints():
+def get_on_endpoints():
     enpoint_results = {}
     for endpoint in GET_ENDPOINTS:
         server_process_times = []
@@ -36,7 +41,7 @@ def get_endpoints():
             server_process_times.append(results["total"] - results["pretransfer"])
             name_lookup_times.append(results["namelookup"])
             connect_times.append(results["connect"] - results["namelookup"])
-        enpoint_results[endpoint] = {
+        enpoint_results[f"GET {endpoint}"] = {
             "server_process_times": server_process_times,
             "name_lookup_times": name_lookup_times,
             "connect_times": connect_times,
@@ -77,12 +82,12 @@ def post_delete_on_endpoint(
         )
 
     return {
-        f"Post {endpoint}": {
+        f"POST {endpoint}": {
             "server_process_times": post_to_server_process_times,
             "name_lookup_times": post_to_name_lookup_times,
             "connect_times": post_to_connect_times,
         },
-        f"Delete {endpoint}": {
+        f"DELETE {endpoint}": {
             "server_process_times": delete_to_server_process_times,
             "name_lookup_times": delete_to_name_lookup_times,
             "connect_times": delete_to_connect_times,
@@ -90,7 +95,7 @@ def post_delete_on_endpoint(
     }
 
 
-def execute_sql():
+def post_on_sql_endpoint():
     add_database("db")
     server_process_times = []
     name_lookup_times = []
@@ -110,47 +115,130 @@ def execute_sql():
     }
 
 
-def get_enpoint_request():
-    results = get_endpoints()
+def benchmark_get_endpoints():
+    results = get_on_endpoints()
     for endpoint, result in results.items():
         print_data(endpoint, result)
-    plot_avg_med_bar_chart(results, "latency_get_endpoints", "server_process_times")
+    return results
 
 
-def add_delete_database():
+def benchmark_database_endpoint():
     result = post_delete_on_endpoint("Database", add_database, delete_database, "db")
-    print_data("Add Database", result["Post Database"])
-    print_data("Delete Database", result["Delete Database"])
-    plot_avg_med_bar_chart(result, "add_delete_database", "server_process_times")
+    print_data("POST Database", result["POST Database"])
+    print_data("DELETE Database", result["DELETE Database"])
+    return result
 
 
-def start_stop_worker():
+def benchmark_worker_endpoint():
     result = post_delete_on_endpoint("Worker", start_worker, stop_worker)
-    print_data("Start Worker", result["Post Worker"])
-    print_data("Stop Worker", result["Delete Worker"])
-    plot_avg_med_bar_chart(result, "start_stop_worker", "server_process_times")
+    print_data("POST Worker", result["POST Worker"])
+    print_data("DELETE Worker", result["DELETE Worker"])
+    return result
 
 
-def start_stop_workload():
+def benchmark_workload_endpoint():
     result = post_delete_on_endpoint("Workload", start_workload, stop_workload)
-    print_data("Start Workload", result["Post Workload"])
-    print_data("Stop Workload", result["Delete Workload"])
-    plot_avg_med_bar_chart(result, "start_stop_workload", "server_process_times")
+    print_data("POST Workload", result["POST Workload"])
+    print_data("DELETE Workload", result["DELETE Workload"])
+    return result
 
 
-def post_to_sql_endpoint():
-    result = execute_sql()
-    print_data("Execute sql", result)
-    plot_avg_med_bar_chart({"sql": result}, "start_stop_worker", "server_process_times")
+def benchmark_sql_endpoint():
+    result = post_on_sql_endpoint()
+    print_data("POST sql", result)
+    return result
+
+
+def create_folder():
+    ts = timegm(gmtime())
+    path = f"measurements/{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
+    mkdir(path)
+    mkdir(f"{path}/server_process_times")
+    mkdir(f"{path}/name_lookup_times")
+    mkdir(f"{path}/connect_times")
+    return path
 
 
 def run_benchmark():
     """Run benchmark."""
-    get_enpoint_request()
-    add_delete_database()
-    start_stop_worker()
-    start_stop_workload()
-    execute_sql()
+    results_get_endpoints = benchmark_get_endpoints()
+    results_database_endpoint = benchmark_database_endpoint()
+    results_worker_endpoint = benchmark_worker_endpoint()
+    results_workload_endpoint = benchmark_workload_endpoint()
+    results_sql_endpoint = benchmark_sql_endpoint()
+
+    main_path = create_folder()
+
+    results = {
+        **results_get_endpoints,
+        **results_database_endpoint,
+        **results_worker_endpoint,
+        **results_workload_endpoint,
+        **{"POST sql": {**results_sql_endpoint}},
+    }
+    results_without_database_endpoint = {
+        **results_get_endpoints,
+        **results_worker_endpoint,
+        **results_workload_endpoint,
+        **{"execute sql": {**results_sql_endpoint}},
+    }
+
+    latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
+
+    for latency_type in latency_types:
+        path = f"{main_path}/{latency_type}"
+        plot_avg_med_bar_chart(
+            results_get_endpoints,
+            path,
+            f"{latency_type}_latency_get_endpoints",
+            latency_type,
+        )
+        plot_avg_med_bar_chart(
+            results_database_endpoint,
+            path,
+            f"{latency_type}_latency_post_delete_database",
+            latency_type,
+        )
+        plot_avg_med_bar_chart(
+            results_worker_endpoint,
+            path,
+            f"{latency_type}_latency_post_delete_worker",
+            latency_type,
+        )
+        plot_avg_med_bar_chart(
+            results_workload_endpoint,
+            path,
+            f"{latency_type}_latency_post_delete_workload",
+            latency_type,
+        )
+        plot_avg_med_bar_chart(
+            {"sql": results_sql_endpoint},
+            path,
+            f"{latency_type}_latency_post_sql",
+            latency_type,
+        )
+        plot_bar_chart(
+            results, path, f"avg_{latency_type}_latency", latency_type, mean, "AVG"
+        )
+        plot_bar_chart(
+            results, path, f"med_{latency_type}_latency", latency_type, median, "MED"
+        )
+        plot_bar_chart(
+            results_without_database_endpoint,
+            path,
+            f"avg_{latency_type}_latency_without_database",
+            latency_type,
+            mean,
+            "AVG",
+        )
+        plot_bar_chart(
+            results_without_database_endpoint,
+            path,
+            f"med_{latency_type}_latency_without_database",
+            latency_type,
+            median,
+            "MED",
+        )
 
 
 if __name__ == "__main__":
