@@ -25,7 +25,7 @@ from benchmark_tools.latency.print_data import print_data
 
 RUNS = 20
 
-GET_ENDPOINTS = [
+MONITOR_ENDPOINTS = [
     "workload",
     "database",
     "queue_length",
@@ -36,8 +36,19 @@ GET_ENDPOINTS = [
 
 
 def get_on_endpoints():
+    """
+    Fetch data from endpoint.
+
+    Use curl wrapper to fetch data from all MONITOR_ENDPOINTS and calculate latencies.
+
+    Returns:
+        Dictionary:
+            server_process_times: Time it took to process request in server.
+            name_lookup_times: name lookup time.
+            connect_times: time it took to connect to server.
+    """
     enpoint_results = {}
-    for endpoint in GET_ENDPOINTS:
+    for endpoint in MONITOR_ENDPOINTS:
         server_process_times = []
         name_lookup_times = []
         connect_times = []
@@ -57,6 +68,11 @@ def get_on_endpoints():
 def post_delete_on_endpoint(
     endpoint, post_endpoint_handler, delete_enpoint_handler, handler_argument=None
 ):
+    """
+    Alternately execute POST and then DELETE on endpoint.
+
+    For every run first use curl wrapper for POST and then DELETE for the same endpoint.
+    """
     post_to_server_process_times = []
     post_to_name_lookup_times = []
     post_to_connect_times = []
@@ -101,6 +117,11 @@ def post_delete_on_endpoint(
 
 
 def post_on_sql_endpoint():
+    """
+    POST to SQL endpoint.
+
+    First use POST to add a database, then execute POST to SQL Endpoint, after that remove database.
+    """
     add_database("db")
     server_process_times = []
     name_lookup_times = []
@@ -121,6 +142,7 @@ def post_on_sql_endpoint():
 
 
 def benchmark_get_endpoints():
+    """Execute benchmark on MONITORE_ENDPOINTS."""
     results = get_on_endpoints()
     for endpoint, result in results.items():
         print_data(endpoint, result)
@@ -128,6 +150,7 @@ def benchmark_get_endpoints():
 
 
 def benchmark_database_endpoint():
+    """Execute benchmark on add and delete database."""
     result = post_delete_on_endpoint("Database", add_database, delete_database, "db")
     print_data("POST Database", result["POST Database"])
     print_data("DELETE Database", result["DELETE Database"])
@@ -135,6 +158,7 @@ def benchmark_database_endpoint():
 
 
 def benchmark_worker_endpoint():
+    """Execute benchmark on start and stop worker."""
     result = post_delete_on_endpoint("Worker", start_worker, stop_worker)
     print_data("POST Worker", result["POST Worker"])
     print_data("DELETE Worker", result["DELETE Worker"])
@@ -142,6 +166,7 @@ def benchmark_worker_endpoint():
 
 
 def benchmark_workload_endpoint():
+    """Execute benchmark on start and stop workload."""
     result = post_delete_on_endpoint("Workload", start_workload, stop_workload)
     print_data("POST Workload", result["POST Workload"])
     print_data("DELETE Workload", result["DELETE Workload"])
@@ -149,12 +174,18 @@ def benchmark_workload_endpoint():
 
 
 def benchmark_sql_endpoint():
+    """Execute benchmark on execute SQL query."""
     result = post_on_sql_endpoint()
     print_data("POST sql", result)
     return result
 
 
 def create_folder():
+    """
+    Create folder to save benchmark results.
+
+    Create Latency folder and append UNIX time stamp to it.
+    """
     ts = timegm(gmtime())
     path = f"measurements/Latency_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -166,6 +197,11 @@ def create_folder():
 
 
 def write_to_csv(data, path):
+    """
+    Write benchmark results to CSV file.
+
+    Create for all the latency intervals a separate CSV file.
+    """
     latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
     for latency_type in latency_types:
         with open(f"{path}/{latency_type}/{latency_type}.csv", "w", newline="") as f:
@@ -185,7 +221,11 @@ def write_to_csv(data, path):
 
 
 def run_benchmark():
-    """Run benchmark."""
+    """
+    Run benchmark.
+
+    Execute benchmark on all endpoints than plot graphs and create CSV.
+    """
     results_get_endpoints = benchmark_get_endpoints()
     results_database_endpoint = benchmark_database_endpoint()
     results_worker_endpoint = benchmark_worker_endpoint()

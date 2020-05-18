@@ -12,6 +12,7 @@ def print_cyan(value):
 
 
 def print_data(endpoint, results):
+    """Print all latency intervals."""
     print_green(f"\nResults for {endpoint}")
     print_cyan("Server process time")
     print(f"Avg: {round(mean(results['server_process_times']) * 1_000, 4)}ms")

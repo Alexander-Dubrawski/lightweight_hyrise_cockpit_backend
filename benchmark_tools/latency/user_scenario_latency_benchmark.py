@@ -26,7 +26,7 @@ from benchmark_tools.latency.print_data import print_data
 RUNS = 1000
 NUMBER_DATABASES = 2
 
-GET_ENDPOINTS = [
+MONITOR_ENDPOINTS = [
     "queue_length",
     "storage",
     "throughput",
@@ -40,6 +40,17 @@ def print_yellow(value):
 
 
 def get_on_endpoints(endpoint):
+    """
+    Fetch data from endpoint.
+
+    Use curl wrapper to fetch data from endpoint and calculate latencies.
+
+    Returns:
+        Dictionary:
+            server_process_times: Time it took to process request in server.
+            name_lookup_times: name lookup time.
+            connect_times: time it took to connect to server.
+    """
     server_process_times = []
     name_lookup_times = []
     connect_times = []
@@ -56,22 +67,33 @@ def get_on_endpoints(endpoint):
 
 
 def benchmark_get_endpoints_sequential():
+    """Execute sequential benchmark on MONITOR_ENDPOINTS endpoints."""
     benchamrk_results = {}
-    for endpoint in GET_ENDPOINTS:
+    for endpoint in MONITOR_ENDPOINTS:
         benchamrk_results[endpoint] = get_on_endpoints(endpoint)
     return benchamrk_results
 
 
 def get_on_endpoint_parallel(endpoint, shared_data):
+    """Save results of benchmark in shared memory data-structured."""
     shared_data[endpoint] = get_on_endpoints(endpoint)
 
 
 def benchmark_get_endpoints_parallel():
+    """
+    Execute benchmark on MONITOR_ENDPOINTS parallel.
+
+    Use a shared memory data-structured to get results from processes. Start one Process
+    for every endpoint in MONITOR_ENDPOINTS and wait until they are done.
+
+    Returns:
+        Dictionary: latency information for every endpoint.
+    """
     manager = Manager()
     shared_data = manager.dict()
     processes = [
         Process(target=get_on_endpoint_parallel, args=(endpoint, shared_data,))
-        for endpoint in GET_ENDPOINTS
+        for endpoint in MONITOR_ENDPOINTS
     ]
     for process in processes:
         process.start()
@@ -83,6 +105,14 @@ def benchmark_get_endpoints_parallel():
 
 
 def post_delete_multiple_databases(handler):
+    """
+    POST or DELETE to database endpoint.
+
+    Parameters:
+        handler: curl wrapper function
+
+    Execute handler NUMBER_DATABASES times on database endpoint.
+    """
     server_process_times = []
     name_lookup_times = []
     connect_times = []
@@ -99,6 +129,12 @@ def post_delete_multiple_databases(handler):
 
 
 def post_data(handler):
+    """
+    POST to endpoint.
+
+    Parameters:
+        handler: curl wrapper function
+    """
     server_process_times = []
     name_lookup_times = []
     connect_times = []
@@ -114,6 +150,14 @@ def post_data(handler):
 
 
 def print_results(results, results_sequential, results_parallel):
+    """
+    Print results of benchmark.
+
+    Parameters:
+        results: results from add/delete database, worker, workload
+        results_sequential: results from sequential benchmark on MONITOR_ENDPOINTS endpoints
+        results_parallel: results from parallel benchmark on MONITOR_ENDPOINTS endpoints
+    """
     for endpoint, result in results.items():
         print_data(endpoint, result)
 
@@ -129,6 +173,11 @@ def print_results(results, results_sequential, results_parallel):
 
 
 def create_folder():
+    """
+    Create folder to save benchmark results.
+
+    Create user scenario latency folder and append UNIX time stamp to it.
+    """
     ts = timegm(gmtime())
     path = f"measurements/User_scenario_latency_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -140,6 +189,14 @@ def create_folder():
 
 
 def plot_graphs(path, results_sequential, results_parallel):
+    """
+    Plot results of benchmark.
+
+    Parameters:
+        path: folder location
+        results: results from add/delete database, worker, workload
+        results_parallel: results from parallel benchmark on MONITOR_ENDPOINTS endpoints
+    """
     latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
     interpolation_factor = 50
     for latency_type in latency_types:
@@ -215,6 +272,11 @@ def plot_graphs(path, results_sequential, results_parallel):
 
 
 def write_to_csv(data, path, file_name):
+    """
+    Write benchmark results to CSV file.
+
+    Create for all the latency intervals a separate CSV file.
+    """
     latency_types = ["server_process_times", "name_lookup_times", "connect_times"]
     for latency_type in latency_types:
         with open(
@@ -236,7 +298,11 @@ def write_to_csv(data, path, file_name):
 
 
 def run_benchmark():
+    """
+    Run benchmark.
 
+    Execute benchmark on all endpoints than plot graphs and create CSV.
+    """
     results = {}
     results["POST database"] = post_delete_multiple_databases(add_database)
     results["POST workload"] = post_data(start_workload)
