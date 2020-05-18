@@ -12,6 +12,7 @@ DURATION = 30
 
 
 def top_background_process(component, pid, shared_data):
+    """Use top utility to determine system data for component."""
     output = []
     start_time = time()
     end_time = start_time + DURATION
@@ -37,6 +38,17 @@ def create_wrapper_processes(pids, shared_data):
 
 
 def get_pids():
+    """
+    Get PID from every component.
+
+    Use lsof to determine PID from Components.
+
+    Return:
+        Dictionary:
+            back_end: PID of back-end component
+            generator: PID of generator component
+            manager: PID of manager component
+    """
     return {
         "back_end": check_output(
             f"lsof -n -i :{BACKEND_PORT} | grep LISTEN", shell=True
@@ -57,6 +69,7 @@ def get_pids():
 
 
 def create_folder():
+    """Create folder to save benchmark results."""
     ts = timegm(gmtime())
     path = f"measurements/system_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -64,6 +77,7 @@ def create_folder():
 
 
 def write_to_csv(data, path):
+    """Write benchmark results to CSV file."""
     filednames = check_output("top -l 1 | grep PID", shell=True).decode("utf-8").split()
     filednames.insert(0, "time_stamp")
     for component, measurements in data.items():
@@ -74,6 +88,12 @@ def write_to_csv(data, path):
 
 
 def run_benchmark():
+    """
+    Execute benchmark on all components parallel.
+
+    Use a shared memory data-structured to get results from processes. Start one Process
+    for every component and wait until they are done.
+    """
     manager = Manager()
     shared_data = manager.dict()
     pids = get_pids()
