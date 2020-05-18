@@ -1,5 +1,4 @@
 from calendar import timegm
-from datetime import datetime
 from statistics import mean, median
 from time import gmtime
 
@@ -37,16 +36,14 @@ def plot_system_data(
     measurement_type,
     statistical_method,
     statistical_method_description,
+    y_label,
 ):
     fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
     formatted_system_values = []
     components = []
     for component, results in data.items():
-        formatted_time_stamps = [
-            datetime.fromtimestamp(time_stamp) for time_stamp in results["time_stamp"]
-        ]
         plt.plot(
-            formatted_time_stamps,
+            results["time_stamp"],
             results["usage"],
             label=f"{component} {measurement_type}",
         )
@@ -55,7 +52,7 @@ def plot_system_data(
         )
         components.append(component)
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
-    plt.ylabel("usage in %")
+    plt.ylabel(y_label)
     plt.xlabel("time")
     plt.title(measurement_type)
     row_labels = [statistical_method_description]

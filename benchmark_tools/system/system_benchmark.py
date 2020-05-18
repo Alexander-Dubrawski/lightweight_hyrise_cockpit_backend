@@ -6,30 +6,24 @@ from os import mkdir
 from re import findall
 from statistics import mean
 from subprocess import check_output
-from time import gmtime, sleep, time
+from time import gmtime, time
 
 from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
 from benchmark_tools.graph_plotter import plot_system_data
 
-DURATION = 30
+DURATION = 40
 
 
 def top_background_process(component, pid, shared_data):
     """Use top utility to determine system data for component."""
-    output = []
     start_time = time()
-    end_time = start_time + DURATION
-    current_time = start_time
-    while current_time < end_time:
-        current_time = time()
-        results = (
-            check_output(f"top -pid {pid} -l 1 | grep {pid}", shell=True)
-            .decode("utf-8")
-            .split()
-        )
-        results.insert(0, current_time)
-        output.append(results)
-        sleep(0.5)
+    output = check_output(
+        f"top -pid {pid} -l {DURATION} | grep {pid}", shell=True
+    ).decode("utf-8")
+    output = output.splitlines()
+    for i in range(DURATION):
+        output[i] = output[i].split()
+        output[i].insert(0, datetime.fromtimestamp(start_time + i))
     shared_data[component] = output
 
 
@@ -131,6 +125,10 @@ def plot_graph(data, path):
         },
     }
     for measurement, components in measurements.items():
+        if measurement == "CPU":
+            y_label = "usage in %"
+        else:
+            y_label = "usage in M"
         plot_system_data(
             components,
             path,
@@ -138,6 +136,7 @@ def plot_graph(data, path):
             f"{measurement} usage",
             mean,
             "AVG",
+            y_label,
         )
         for component, results in components.items():
             plot_system_data(
@@ -147,6 +146,7 @@ def plot_graph(data, path):
                 f"{measurement} usage",
                 mean,
                 "AVG",
+                y_label,
             )
 
 
