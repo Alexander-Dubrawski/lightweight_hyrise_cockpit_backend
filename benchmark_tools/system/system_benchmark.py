@@ -3,10 +3,13 @@ from csv import writer
 from datetime import datetime
 from multiprocessing import Manager, Process
 from os import mkdir
+from re import findall
+from statistics import mean
 from subprocess import check_output
 from time import gmtime, sleep, time
 
 from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
+from benchmark_tools.graph_plotter import plot_system_data
 
 DURATION = 30
 
@@ -76,6 +79,77 @@ def create_folder():
     return path
 
 
+def get_memory_usage_in_m(usage):
+    """Convert memory usage value to M."""
+    m_metric_converter = {
+        "B": lambda B: B / 1_000_000,
+        "K": lambda K: K / 1_000,
+        "M": lambda M: M,
+        "G": lambda G: G * 1_000,
+    }
+    memory = findall(r"\d+", usage)[0]
+    metric = findall(r"[A-Z]", usage)[0]
+    return m_metric_converter[metric](int(memory))
+
+
+def extract_memory_usage(data_set):
+    """Extract memory usage."""
+    measurements = {
+        "usage": [],
+        "time_stamp": [],
+    }
+    for data in data_set:
+        measurements["usage"].append(get_memory_usage_in_m(data[8]))
+        measurements["time_stamp"].append(data[0])
+    return measurements
+
+
+def extract_cpu_usgae(data_set):
+    """Extract CPU usage."""
+    measurements = {
+        "usage": [],
+        "time_stamp": [],
+    }
+    for data in data_set:
+        measurements["usage"].append(float(data[3]))
+        measurements["time_stamp"].append(data[0])
+    return measurements
+
+
+def plot_graph(data, path):
+    """Plot graphs for every metric and component."""
+    measurements = {
+        "CPU": {
+            "back_end": extract_cpu_usgae(data["back_end"]),
+            "generator": extract_cpu_usgae(data["generator"]),
+            "manager": extract_cpu_usgae(data["manager"]),
+        },
+        "MEMORY": {
+            "back_end": extract_memory_usage(data["back_end"]),
+            "generator": extract_memory_usage(data["generator"]),
+            "manager": extract_memory_usage(data["manager"]),
+        },
+    }
+    for measurement, components in measurements.items():
+        plot_system_data(
+            components,
+            path,
+            f"{measurement}_usage",
+            f"{measurement} usage",
+            mean,
+            "AVG",
+        )
+        for component, results in components.items():
+            plot_system_data(
+                {component: results},
+                path,
+                f"{component}_{measurement}_usage",
+                f"{measurement} usage",
+                mean,
+                "AVG",
+            )
+
+
 def write_to_csv(data, path):
     """Write benchmark results to CSV file."""
     filednames = check_output("top -l 1 | grep PID", shell=True).decode("utf-8").split()
@@ -105,6 +179,7 @@ def run_benchmark():
         process.join()
         process.terminate()
     print
+    plot_graph(shared_data, path)
     write_to_csv(shared_data, path)
 
 
