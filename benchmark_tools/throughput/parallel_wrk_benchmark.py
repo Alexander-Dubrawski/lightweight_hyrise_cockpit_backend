@@ -35,6 +35,7 @@ def create_wrk_processes(shared_data):
 
 
 def get_format_results(results):
+    """Extract Requests/sec from wrk output."""
     formatted_results = {}
     for endpoint, output in results.items():
         output_split = output.split()
@@ -45,11 +46,13 @@ def get_format_results(results):
 
 
 def print_output(results):
+    """Print results of benchmark."""
     for output in results.values():
         print(output)
 
 
 def create_folder():
+    """Create folder to save benchmark results."""
     ts = timegm(gmtime())
     path = f"measurements/Throughput_parallel_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -57,6 +60,7 @@ def create_folder():
 
 
 def write_to_csv(data, path):
+    """Write benchmark results to CSV file."""
     with open(f"{path}/parallel_throughput.csv", "w", newline="") as f:
         filednames = ["endpoints", "throughput_per_sec"]
         csv_writer = writer(f, delimiter="|")
@@ -66,7 +70,12 @@ def write_to_csv(data, path):
 
 
 def run_benchmark():
-    """Run wrk benchmark on endpoints."""
+    """
+    Execute wrk benchmark on all components parallel.
+
+    Use a shared memory data-structured to get results from processes. Start one Process
+    for every component and wait until they are done.
+    """
     manager = Manager()
     shared_data = manager.dict()
     processes = create_wrk_processes(shared_data)

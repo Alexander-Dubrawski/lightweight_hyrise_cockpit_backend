@@ -22,6 +22,7 @@ def wrk_background_process(url):
 
 
 def get_format_results(results):
+    """Extract Requests/sec from wrk output."""
     formatted_results = {}
     for endpoint, output in results.items():
         output_split = output.split()
@@ -32,11 +33,13 @@ def get_format_results(results):
 
 
 def print_output(results):
+    """Print results of benchmark."""
     for output in results.values():
         print(output)
 
 
 def create_folder():
+    """Create folder to save benchmark results."""
     ts = timegm(gmtime())
     path = f"measurements/Throughput_sequential_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -44,6 +47,7 @@ def create_folder():
 
 
 def write_to_csv(data, path):
+    """Write benchmark results to CSV file."""
     with open(f"{path}/sequential_throughput.csv", "w", newline="") as f:
         filednames = ["endpoints", "throughput_per_sec"]
         csv_writer = writer(f, delimiter="|")

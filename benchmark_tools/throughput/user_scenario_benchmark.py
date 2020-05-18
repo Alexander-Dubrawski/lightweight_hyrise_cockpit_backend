@@ -31,7 +31,7 @@ def add_database(database_id: str):
 
 
 def remove_database(database_id: str):
-    """Add database."""
+    """Remove database."""
     body = {"id": database_id}
     url = f"{BACKEND_URL}/database"
     return delete(url, json=body)
@@ -81,6 +81,7 @@ def create_wrk_processes(shared_data):
 
 
 def get_format_results(results):
+    """Extract Requests/sec from wrk output."""
     formatted_results = {}
     for endpoint, output in results.items():
         output_split = output.split()
@@ -91,11 +92,13 @@ def get_format_results(results):
 
 
 def print_output(results):
+    """Print results of benchmark."""
     for output in results.values():
         print(output)
 
 
 def create_folder():
+    """Create folder to save benchmark results."""
     ts = timegm(gmtime())
     path = f"measurements/Throughput_user_scenario_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
@@ -103,6 +106,7 @@ def create_folder():
 
 
 def write_to_csv(data, path):
+    """Write benchmark results to CSV file."""
     with open(f"{path}/parallel_throughput.csv", "w", newline="") as f:
         filednames = ["endpoints", "throughput_per_sec"]
         csv_writer = writer(f, delimiter="|")
@@ -122,7 +126,7 @@ def run_wrk_benchmark(shared_data):
 
 
 def run_benchmark():
-    """Execute scenario steps"""
+    """Execute user scenario steps"""
     manager = Manager()
     shared_data = manager.dict()
     total_response_time = 0
