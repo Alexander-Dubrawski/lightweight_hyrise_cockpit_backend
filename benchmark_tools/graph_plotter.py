@@ -1,4 +1,5 @@
 from calendar import timegm
+from datetime import datetime
 from statistics import mean, median
 from time import gmtime
 
@@ -42,10 +43,11 @@ def plot_system_data(
     formatted_system_values = []
     components = []
     for component, results in data.items():
+        formatted_usage = [
+            datetime.fromtimestamp(time_stamp) for time_stamp in results["time_stamp"]
+        ]
         plt.plot(
-            results["time_stamp"],
-            results["usage"],
-            label=f"{component} {measurement_type}",
+            formatted_usage, results["usage"], label=f"{component} {measurement_type}",
         )
         formatted_system_values.append(
             f"{round(statistical_method(results['usage']), 2)}%"

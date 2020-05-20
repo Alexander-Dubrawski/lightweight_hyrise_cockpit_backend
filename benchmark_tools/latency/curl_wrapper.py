@@ -113,7 +113,7 @@ def start_workload():
     url = f"{BACKEND_URL}/workload"
     header_accept = "accept: application/json"
     header_content_type = "Content-Type: application/json"
-    data = '{ \\"frequency\\": 1000, \\"workload_name\\": \\"some_workload\\"}'
+    data = '{ \\"frequency\\": 10000, \\"workload_name\\": \\"some_workload\\"}'
     output = check_output(
         f'curl -w "@{CURL_FORMAT_FILE}" -o /dev/null -s -X POST "{url}" -H "{header_accept}" -H "{header_content_type}" -d "{data}"',
         shell=True,

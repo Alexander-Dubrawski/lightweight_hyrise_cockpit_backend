@@ -18,7 +18,6 @@ def execute_worker(
             worker_wait_for_exit_event.wait()
         try:
             _ = task_queue.get(block=False)
-            # Do some work
             sleep(0.001)
         except Empty:
             continue

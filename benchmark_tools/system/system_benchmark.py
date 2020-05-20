@@ -6,7 +6,7 @@ from os import mkdir
 from re import findall
 from statistics import mean
 from subprocess import check_output
-from time import gmtime, time
+from time import gmtime
 
 from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
 from benchmark_tools.graph_plotter import plot_system_data
@@ -16,15 +16,11 @@ DURATION = 40
 
 def top_background_process(component, pid, shared_data):
     """Use top utility to determine system data for component."""
-    start_time = time()
     output = check_output(
-        f"top -pid {pid} -l {DURATION} | grep {pid}", shell=True
+        f"top -l {DURATION} | ts '%Y-%m-%d_%H:%M:%S' | grep {pid}", shell=True
     ).decode("utf-8")
     output = output.splitlines()
-    for i in range(DURATION):
-        output[i] = output[i].split()
-        output[i].insert(0, datetime.fromtimestamp(start_time + i))
-    shared_data[component] = output
+    shared_data[component] = [line.split() for line in output]
 
 
 def create_wrapper_processes(pids, shared_data):
@@ -92,9 +88,17 @@ def extract_memory_usage(data_set):
         "usage": [],
         "time_stamp": [],
     }
+    last_ts = 0
     for data in data_set:
-        measurements["usage"].append(get_memory_usage_in_m(data[8]))
-        measurements["time_stamp"].append(data[0])
+        current_ts = datetime.timestamp(data[0])
+        if current_ts > last_ts:
+            measurements["usage"].append(get_memory_usage_in_m(data[8]))
+            measurements["time_stamp"].append(current_ts)
+            last_ts = current_ts
+        else:
+            measurements["usage"][-1] = measurements["usage"][
+                -1
+            ] + get_memory_usage_in_m(data[8])
     return measurements
 
 
@@ -104,10 +108,30 @@ def extract_cpu_usgae(data_set):
         "usage": [],
         "time_stamp": [],
     }
+    last_ts = 0
     for data in data_set:
-        measurements["usage"].append(float(data[3]))
-        measurements["time_stamp"].append(data[0])
+        current_ts = datetime.timestamp(data[0])
+        if current_ts > last_ts:
+            measurements["usage"].append(float(data[3]))
+            measurements["time_stamp"].append(current_ts)
+            last_ts = current_ts
+        else:
+            measurements["usage"][-1] = measurements["usage"][-1] + float(data[3])
     return measurements
+
+
+def format_data(row_data):
+    formatted_data = {}
+    for component, results in row_data.items():
+        formatted_lines = []
+        for line in results:
+            formatted_line = line
+            formatted_line[0] = datetime.strptime(
+                formatted_line[0], "%Y-%m-%d_%H:%M:%S"
+            )
+            formatted_lines.append(formatted_line)
+        formatted_data[component] = formatted_lines
+    return formatted_data
 
 
 def plot_graph(data, path):
@@ -178,9 +202,9 @@ def run_benchmark():
     for process in processes:
         process.join()
         process.terminate()
-    print
-    plot_graph(shared_data, path)
     write_to_csv(shared_data, path)
+    formatted_data = format_data(shared_data)
+    plot_graph(formatted_data, path)
 
 
 if __name__ == "__main__":

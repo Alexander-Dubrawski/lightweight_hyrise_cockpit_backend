@@ -21,7 +21,12 @@ marshmallow = "*"
 pyzmq = "*"
 apscheduler = "*"
 matplotlib = "*"
-scipy = "1.2.1"
+scipy = "*"
+psycopg2-binary = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
