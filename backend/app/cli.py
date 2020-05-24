@@ -6,7 +6,7 @@ from .controller import app
 
 def main() -> None:
     """Create and start a backend API."""
-    app.run(host=BACKEND_LISTENING, port=BACKEND_PORT, debug=False, threaded=True)
+    app.run(host=BACKEND_LISTENING, port=BACKEND_PORT, debug=False, threaded=False)
 
 
 if __name__ == "__main__":

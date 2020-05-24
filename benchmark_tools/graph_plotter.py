@@ -1,21 +1,10 @@
 from calendar import timegm
 from datetime import datetime
-from statistics import mean, median
 from time import gmtime
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.pyplot import figure
-
-
-def interpolate(data, steps):
-    x_values = []
-    y_values = []
-    for i in range(0, len(data), steps):
-        y_values.append(mean(data[i : i + steps]))
-        x_values.append(i)
-    rounded_y_values = [round(value * 1000, 4) for value in y_values]
-    return (x_values, rounded_y_values)
 
 
 def plot_matrix_sub_plot(row_labels, rows, col_labels):
@@ -65,177 +54,75 @@ def plot_system_data(
     plt.close(fig)
 
 
-def plot_line_chart(
-    data,
-    path,
-    file_name,
-    latency_type,
-    interpolation_factor,
-    statistical_method,
-    statistical_method_description,
-):
-    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
-    endpoints = []
-    formatted_statistical_values = []
-    for key, values in data.items():
-        formatted_statistical_values.append(
-            f"{round(statistical_method(values[latency_type]) * 1_000, 4)}ms"
-        )
-        x_values, y_values = interpolate(values[latency_type], interpolation_factor)
-        plt.plot(x_values, y_values, label=key)
-        endpoints.append(key)
-
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
-    plt.ylabel("time ms")
-    plt.xlabel("runs")
-    plt.title(latency_type)
-    row_labels = [statistical_method_description]
-    rows = [formatted_statistical_values]
-    plot_matrix_sub_plot(row_labels, rows, endpoints)
-    ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
-    plt.close(fig)
-
-
-def plot_avg_med_bar_chart(data, path, file_name, latency_type):
-    endpoints = []
-    avg_values = []
-    med_values = []
-    row_avg_values = []
-    row_med_values = []
-    for key, values in data.items():
-        avg_values.append(round(mean(values[latency_type]) * 1_000, 4))
-        med_values.append(round(median(values[latency_type]) * 1_000, 4))
-        row_avg_values.append(f"{round(mean(values[latency_type]) * 1_000, 4)}ms")
-        row_med_values.append(f"{round(median(values[latency_type]) * 1_000, 4)}ms")
-        endpoints.append(key)
-
-    ind = np.arange(len(avg_values))
-    width = 0.20
-    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
-    plt.bar(ind, avg_values, width, label="AVG")
-    plt.bar(ind + width, med_values, width, label="MED")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
-    plt.ylabel("time ms")
-    plt.title("Latency per endpoint")
-    plt.xticks(ind + width / 2, endpoints)
-    row_labels = ["AVG", "MED"]
-    rows = [row_avg_values, row_med_values]
-    plot_matrix_sub_plot(row_labels, rows, endpoints)
-
-    ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
-    plt.close(fig)
-
-
-def plot_bar_chart(
-    data,
-    path,
-    file_name,
-    latency_type,
-    statistical_method,
-    statistical_method_description,
+def plot_comparison_parallel_sequential(
+    sequential_data, parallel_data, path, metric_type, comparison_type, file_name, label
 ):
     endpoints = []
-    statistical_values = []
-    row_statistical_values = []
-    for key, values in data.items():
-        statistical_values.append(
-            round(statistical_method(values[latency_type]) * 1_000, 4)
-        )
-        row_statistical_values.append(
-            f"{round(statistical_method(values[latency_type]) * 1_000, 4)}ms"
-        )
+    parallel_values = []
+    sequential_values = []
+    for key, values in sequential_data.items():
         endpoints.append(key)
+        sequential_values.append(values[metric_type][comparison_type])
+        parallel_values.append(parallel_data[key][metric_type][comparison_type])
 
-    ind = np.arange(len(statistical_values))
-    width = 0.20
-    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
-    plt.bar(ind, statistical_values, width, label=statistical_method_description)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
-    plt.ylabel("time ms")
-    plt.title("Latency per endpoint")
-    plt.xticks(ind + width / 2, endpoints)
-    row_labels = [statistical_method_description]
-    rows = [row_statistical_values]
-    plot_matrix_sub_plot(row_labels, rows, endpoints)
-
-    ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
-    plt.close(fig)
-
-
-def plot_bar_chart_throughput(data, path, file_name):
-    endpoints = []
-    throughput_values = []
-    formatted_values = []
-    for key, value in data.items():
-        throughput_values.append(float(value))
-        formatted_values.append(f"{value}/sec")
-        endpoints.append(key)
-
-    x_pos = [i for i, _ in enumerate(endpoints)]
-    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
-    plt.bar(x_pos, throughput_values, label="Requests/sec")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
-    plt.ylabel("Requests/sec")
-    plt.title("Throughput per endpoint")
-    plt.xticks(x_pos, endpoints)
-    row_labels = ["Requests/sec"]
-    rows = [formatted_values]
-    plot_matrix_sub_plot(row_labels, rows, endpoints)
-
-    ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
-    plt.close(fig)
-
-
-def plot_stacked_bar_chart(data, path, file_name, statistical_method):
-    endpoints = list(data.keys())
-    server_process_times = np.array(
-        [
-            round(statistical_method(data[endpoint]["server_process_times"]) * 1_000, 4)
-            for endpoint in endpoints
-        ]
-    )
-    name_lookup_times = np.array(
-        [
-            round(statistical_method(data[endpoint]["name_lookup_times"]) * 1_000, 4)
-            for endpoint in endpoints
-        ]
-    )
-    connect_times = np.array(
-        [
-            round(statistical_method(data[endpoint]["connect_times"]) * 1_000, 4)
-            for endpoint in endpoints
-        ]
-    )
     ind = np.arange(len(endpoints))
     width = 0.20
-    fig = figure(num=None, figsize=(32, 16), dpi=80, facecolor="w", edgecolor="k")
+    fig = figure(num=None, figsize=(40, 20), dpi=80, facecolor="w", edgecolor="k")
+    plt.bar(ind, parallel_values, width, label=f"parallel {comparison_type}")
     plt.bar(
-        ind,
-        server_process_times,
-        width,
-        label="server_process_times",
-        color="coral",
-        bottom=name_lookup_times + connect_times,
-    )
-    plt.bar(
-        ind,
-        connect_times,
-        width,
-        label="connect_times",
-        color="royalblue",
-        bottom=name_lookup_times,
-    )
-    plt.bar(
-        ind, name_lookup_times, width, label="name_lookup_times", color="lightslategrey"
+        ind + width, sequential_values, width, label=f"sequenzial {comparison_type}"
     )
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.ylabel(label)
+    plt.xlabel("Endpoints")
+    plt.title(f"{comparison_type} {metric_type} per endpoint")
     plt.xticks(ind + width / 2, endpoints)
-    plt.ylabel("time ms")
-    plt.title("Latency distribution per endpoint")
+    if metric_type == "Latency":
+        row_labels = [
+            f"{comparison_type} in ms running parallel",
+            f"{comparison_type} in ms running sequential",
+        ]
+    else:
+        row_labels = [
+            f"{comparison_type} in req/sec running sequential",
+            f"{comparison_type} in req/sec running sequential",
+        ]
+    rows = [parallel_values, sequential_values]
+    plot_matrix_sub_plot(row_labels, rows, endpoints)
+
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.close(fig)
+
+
+def plot_bar_chart(data, path, metric_type, file_name, label):
+    endpoints = []
+    avg_values = []
+    stdev_values = []
+    max_values = []
+    for key, values in data.items():
+        endpoints.append(key)
+        avg_values.append(values[metric_type]["Avg"])
+        stdev_values.append(values[metric_type]["Stdev"])
+        max_values.append(values[metric_type]["Max"])
+
+    ind = np.arange(len(endpoints))
+    width = 0.20
+    fig = figure(num=None, figsize=(40, 20), dpi=80, facecolor="w", edgecolor="k")
+    plt.bar(ind, stdev_values, width, label="Stdev")
+    plt.bar(ind + width, avg_values, width, label="Avg")
+    plt.bar(ind + (2 * width), max_values, width, label="Max")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.ylabel(label)
+    plt.xlabel("Endpoints")
+    plt.title(f"{metric_type} per endpoint")
+    plt.xticks(ind + width, endpoints)
+    if metric_type == "Latency":
+        row_labels = ["Avg in ms", "Stdev in ms", "Max in ms"]
+    else:
+        row_labels = ["Avg in req/sec", "Stdev in req/sec", "Max in req/sec"]
+    rows = [avg_values, stdev_values, max_values]
+    plot_matrix_sub_plot(row_labels, rows, endpoints)
 
     ts = timegm(gmtime())
     plt.savefig(f"{path}/{file_name}_{ts}.png")

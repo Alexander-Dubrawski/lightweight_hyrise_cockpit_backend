@@ -11,7 +11,7 @@ from time import gmtime
 from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
 from benchmark_tools.graph_plotter import plot_system_data
 
-DURATION = 40
+DURATION = 80
 
 
 def top_background_process(component, pid, shared_data):

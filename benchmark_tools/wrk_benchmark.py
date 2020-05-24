@@ -10,14 +10,11 @@ from time import gmtime
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
+from .graph_plotter import plot_bar_chart, plot_comparison_parallel_sequential
+
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_SECOUNDS = 1
+DURATION_IN_SECOUNDS = 30
 ENDPOINTS = ["workload", "database", "queue_length", "storage", "throughput", "latency"]
-
-
-def print_green(value):
-    """Print green colored text."""
-    print("\033[92m{}\033[00m".format(value))
 
 
 def print_cyan(value):
@@ -81,29 +78,25 @@ def format_results(results):
                 "+/- Stdev in %": float(
                     findall(r"[-+]?\d*\.\d+|\d+", output_split[index_latency + 4])[0]
                 ),
-                "distribution": [
-                    (
-                        output_split[index_latency_distribution + 1],
-                        get_usage_in_ms(output_split[index_latency_distribution + 2]),
+                "distribution": {
+                    "50%": get_usage_in_ms(
+                        output_split[index_latency_distribution + 2]
                     ),
-                    (
-                        output_split[index_latency_distribution + 3],
-                        get_usage_in_ms(output_split[index_latency_distribution + 4]),
+                    "75%": get_usage_in_ms(
+                        output_split[index_latency_distribution + 4]
                     ),
-                    (
-                        output_split[index_latency_distribution + 5],
-                        get_usage_in_ms(output_split[index_latency_distribution + 6]),
+                    "90%": get_usage_in_ms(
+                        output_split[index_latency_distribution + 6]
                     ),
-                    (
-                        output_split[index_latency_distribution + 7],
-                        get_usage_in_ms(output_split[index_latency_distribution + 8]),
+                    "99%": get_usage_in_ms(
+                        output_split[index_latency_distribution + 8]
                     ),
-                ],
+                },
             },
             "Req/Sec": {
-                "Avg": output_split[index_req_sec + 1],
-                "Stdev": output_split[index_req_sec + 2],
-                "Max": output_split[index_req_sec + 3],
+                "Avg": float(output_split[index_req_sec + 1]),
+                "Stdev": float(output_split[index_req_sec + 2]),
+                "Max": float(output_split[index_req_sec + 3]),
                 "+/- Stdev in %": float(
                     findall(r"[-+]?\d*\.\d+|\d+", output_split[index_req_sec + 4])[0]
                 ),
@@ -128,8 +121,8 @@ def create_folder():
 
 def write_to_csv(sequential_data, parallel_data, path):
     """Write benchmark results to CSV file."""
-    filednames = ["Endpoints", "Avg", "Stdev", "Max", "+/- Stdev in %", "Mode"]
     with open(f"{path}/wrk_throughput.csv", "w", newline="") as f:
+        filednames = ["Endpoints", "Avg", "Stdev", "Max", "+/- Stdev in %", "Mode"]
         csv_writer = writer(f, delimiter="|")
         csv_writer.writerow(filednames)
         sequential_rows = [
@@ -157,6 +150,18 @@ def write_to_csv(sequential_data, parallel_data, path):
         csv_writer.writerows(sequential_rows)
         csv_writer.writerows(parallel_rows)
     with open(f"{path}/wrk_latency.csv", "w", newline="") as f:
+        filednames = [
+            "Endpoints",
+            "Avg",
+            "Stdev",
+            "Max",
+            "+/- Stdev in %",
+            "LD_50%",
+            "LD_75%",
+            "LD_90%",
+            "LD_99%",
+            "Mode",
+        ]
         csv_writer = writer(f, delimiter="|")
         csv_writer.writerow(filednames)
         sequential_rows = [
@@ -166,6 +171,10 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
                 results["Latency"]["+/- Stdev in %"],
+                results["Latency"]["distribution"]["50%"],
+                results["Latency"]["distribution"]["75%"],
+                results["Latency"]["distribution"]["90%"],
+                results["Latency"]["distribution"]["99%"],
                 "sequential",
             ]
             for endpoint, results in sequential_data.items()
@@ -177,12 +186,61 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
                 results["Latency"]["+/- Stdev in %"],
+                results["Latency"]["distribution"]["50%"],
+                results["Latency"]["distribution"]["75%"],
+                results["Latency"]["distribution"]["90%"],
+                results["Latency"]["distribution"]["99%"],
                 "parallel",
             ]
             for endpoint, results in parallel_data.items()
         ]
         csv_writer.writerows(sequential_rows)
         csv_writer.writerows(parallel_rows)
+
+
+def plot_charts(path, formatted_sequential_results, formatted_parallel_results):
+    plot_bar_chart(
+        formatted_sequential_results,
+        path,
+        "Latency",
+        "sequenzial_latency",
+        "Latency in ms",
+    )
+    plot_bar_chart(
+        formatted_parallel_results, path, "Latency", "parallel_latency", "Latency in ms"
+    )
+    plot_bar_chart(
+        formatted_sequential_results,
+        path,
+        "Req/Sec",
+        "sequenzial_throughput",
+        "Throughput in req/sec",
+    )
+    plot_bar_chart(
+        formatted_parallel_results,
+        path,
+        "Req/Sec",
+        "parallel_throughput",
+        "Throughput in req/sec",
+    )
+    plot_comparison_parallel_sequential(
+        formatted_sequential_results,
+        formatted_parallel_results,
+        path,
+        "Latency",
+        "Avg",
+        "comparison_latency",
+        "Latency in ms",
+    )
+    plot_comparison_parallel_sequential(
+        formatted_sequential_results,
+        formatted_parallel_results,
+        path,
+        "Req/Sec",
+        "Avg",
+        "comparison_throughput",
+        "Throughput in req/sec",
+    )
 
 
 def run_benchmark():
@@ -210,6 +268,7 @@ def run_benchmark():
     formatted_sequential_results = format_results(sequential_results)
     formatted_parallel_results = format_results(parallel_results)
     path = create_folder()
+    plot_charts(path, formatted_sequential_results, formatted_parallel_results)
     write_to_csv(formatted_sequential_results, formatted_parallel_results, path)
 
 
