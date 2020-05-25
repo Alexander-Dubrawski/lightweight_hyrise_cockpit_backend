@@ -84,7 +84,7 @@ def plot_comparison_parallel_sequential(
         ]
     else:
         row_labels = [
-            f"{comparison_type} in req/sec running sequential",
+            f"{comparison_type} in req/sec running parallel",
             f"{comparison_type} in req/sec running sequential",
         ]
     rows = [parallel_values, sequential_values]
