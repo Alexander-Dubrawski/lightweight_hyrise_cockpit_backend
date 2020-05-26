@@ -20,7 +20,7 @@ ENDPOINTS = ["workload", "database", "queue_length", "storage", "throughput", "l
 def execute_wrk_on_endpoint(url):
     """Background process to execute wrk."""
     return check_output(
-        f"wrk -t1 -c1 --latency -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
+        f"wrk -t1 -c1 ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
         shell=True,
     ).decode("utf-8")
 
@@ -28,7 +28,7 @@ def execute_wrk_on_endpoint(url):
 def wrk_background_process(url, endpoint, shared_data):
     """Background process to execute wrk."""
     shared_data[endpoint] = check_output(
-        f"wrk -t1 -c1 --latency -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
+        f"wrk -t1 -c1 ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
         shell=True,
     ).decode("utf-8")
 

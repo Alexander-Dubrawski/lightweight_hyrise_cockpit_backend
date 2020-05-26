@@ -1,6 +1,7 @@
 from calendar import timegm
 from csv import writer
 from datetime import datetime
+from json import loads
 from os import mkdir
 from re import findall
 from time import gmtime
@@ -80,41 +81,16 @@ def format_results(results):
     """Extract Requests/sec and Latency from wrk output and saves it in a dictionary structure."""
     formatted_results = {}
     for endpoint, output in results.items():
-        output_split = output.split()
-        index_latency = output_split.index("Latency")
-        index_latency_distribution = output_split.index("Distribution")
-        index_req_sec = output_split.index("Req/Sec")
+        split_output = output.splitlines()
+        index_latency_values = split_output.index("latency_values:")
+        index_request_values = split_output.index("request_values:")
+        index_latency_distribution = split_output.index("latency_distribution:")
+        index_percentiles = split_output.index("percentiles:")
         formatted_results[endpoint] = {
-            "Latency": {
-                "Avg": get_usage_in_ms(output_split[index_latency + 1]),
-                "Stdev": get_usage_in_ms(output_split[index_latency + 2]),
-                "Max": get_usage_in_ms(output_split[index_latency + 3]),
-                "+/- Stdev in %": float(
-                    findall(r"[-+]?\d*\.\d+|\d+", output_split[index_latency + 4])[0]
-                ),
-                "distribution": {
-                    "50%": get_usage_in_ms(
-                        output_split[index_latency_distribution + 2]
-                    ),
-                    "75%": get_usage_in_ms(
-                        output_split[index_latency_distribution + 4]
-                    ),
-                    "90%": get_usage_in_ms(
-                        output_split[index_latency_distribution + 6]
-                    ),
-                    "99%": get_usage_in_ms(
-                        output_split[index_latency_distribution + 8]
-                    ),
-                },
-            },
-            "Req/Sec": {
-                "Avg": float(output_split[index_req_sec + 1]),
-                "Stdev": float(output_split[index_req_sec + 2]),
-                "Max": float(output_split[index_req_sec + 3]),
-                "+/- Stdev in %": float(
-                    findall(r"[-+]?\d*\.\d+|\d+", output_split[index_req_sec + 4])[0]
-                ),
-            },
+            "Latency": loads(split_output[index_latency_values + 1]),
+            "latency_distribution": loads(split_output[index_latency_distribution + 1]),
+            "Req/Sec": loads(split_output[index_request_values + 1]),
+            "latency_percentiles": loads(split_output[index_percentiles + 1]),
         }
     return formatted_results
 
@@ -174,6 +150,10 @@ def write_to_csv(sequential_data, parallel_data, path):
             "LD_75%",
             "LD_90%",
             "LD_99%",
+            "LD_99.9%",
+            "LD_99.99%",
+            "LD_99.999%",
+            "LD_100%",
             "Mode",
         ]
         csv_writer = writer(f, delimiter="|")
@@ -185,10 +165,14 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
                 results["Latency"]["+/- Stdev in %"],
-                results["Latency"]["distribution"]["50%"],
-                results["Latency"]["distribution"]["75%"],
-                results["Latency"]["distribution"]["90%"],
-                results["Latency"]["distribution"]["99%"],
+                results["Latency"]["latency_distribution"]["50%"],
+                results["Latency"]["latency_distribution"]["75%"],
+                results["Latency"]["latency_distribution"]["90%"],
+                results["Latency"]["latency_distribution"]["99%"],
+                results["Latency"]["latency_distribution"]["99.9%"],
+                results["Latency"]["latency_distribution"]["99.99%"],
+                results["Latency"]["latency_distribution"]["99.999%"],
+                results["Latency"]["latency_distribution"]["100%"],
                 "sequential",
             ]
             for endpoint, results in sequential_data.items()
@@ -204,6 +188,10 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["distribution"]["75%"],
                 results["Latency"]["distribution"]["90%"],
                 results["Latency"]["distribution"]["99%"],
+                results["Latency"]["latency_distribution"]["99.9%"],
+                results["Latency"]["latency_distribution"]["99.99%"],
+                results["Latency"]["latency_distribution"]["99.999%"],
+                results["Latency"]["latency_distribution"]["100%"],
                 "parallel",
             ]
             for endpoint, results in parallel_data.items()
