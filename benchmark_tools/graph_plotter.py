@@ -19,6 +19,25 @@ def plot_matrix_sub_plot(row_labels, rows, col_labels):
     plt.subplots_adjust(left=0.2, bottom=0.2)
 
 
+def plot_hdr_histogram(data, path, file_name):
+    fig = figure(num=None, figsize=(30, 10), dpi=80, facecolor="w", edgecolor="k")
+    for component, results in data.items():
+        x_values = ["0%"]
+        y_values = [0.0]
+        for percentile, value in results["latency_distribution"].items():
+            x_values.append(percentile)
+            y_values.append(value)
+        plt.plot(x_values, y_values, label=f"{component}")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.ylabel("Latency (milliseconds)")
+    plt.xlabel("Percentile")
+    plt.title("Latency by Percentile Distribution")
+    plt.grid()
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.close(fig)
+
+
 def plot_system_data(
     data,
     path,

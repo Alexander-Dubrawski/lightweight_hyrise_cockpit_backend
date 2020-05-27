@@ -10,7 +10,11 @@ from requests import delete, post
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
-from .graph_plotter import plot_bar_chart, plot_comparison_parallel_sequential
+from .graph_plotter import (
+    plot_bar_chart,
+    plot_comparison_parallel_sequential,
+    plot_hdr_histogram,
+)
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 
@@ -106,6 +110,8 @@ def create_folder(name):
     ts = timegm(gmtime())
     path = f"measurements/{name}_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
+    mkdir(f"{path}/hdr_histogram")
+    mkdir(f"{path}/bar_charts")
     return path
 
 
@@ -143,6 +149,7 @@ def write_to_csv(sequential_data, parallel_data, path):
             "Avg",
             "Stdev",
             "Max",
+            "LD_25%",
             "LD_50%",
             "LD_75%",
             "LD_90%",
@@ -161,6 +168,7 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Avg"],
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
+                results["latency_distribution"]["25%"],
                 results["latency_distribution"]["50%"],
                 results["latency_distribution"]["75%"],
                 results["latency_distribution"]["90%"],
@@ -179,6 +187,7 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Avg"],
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
+                results["latency_distribution"]["25%"],
                 results["latency_distribution"]["50%"],
                 results["latency_distribution"]["75%"],
                 results["latency_distribution"]["90%"],
@@ -219,26 +228,31 @@ def write_to_csv(sequential_data, parallel_data, path):
 
 def plot_results(path, formatted_sequential_results, formatted_parallel_results):
     """Plots wrk results in bar charts."""
+    path_bar_chart = f"{path}/bar_charts"
     plot_bar_chart(
         formatted_sequential_results,
-        path,
+        path_bar_chart,
         "Latency",
         "sequenzial_latency",
         "Latency in ms",
     )
     plot_bar_chart(
-        formatted_parallel_results, path, "Latency", "parallel_latency", "Latency in ms"
+        formatted_parallel_results,
+        path_bar_chart,
+        "Latency",
+        "parallel_latency",
+        "Latency in ms",
     )
     plot_bar_chart(
         formatted_sequential_results,
-        path,
+        path_bar_chart,
         "Req/Sec",
         "sequenzial_throughput",
         "Throughput in req/sec",
     )
     plot_bar_chart(
         formatted_parallel_results,
-        path,
+        path_bar_chart,
         "Req/Sec",
         "parallel_throughput",
         "Throughput in req/sec",
@@ -246,7 +260,7 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     plot_comparison_parallel_sequential(
         formatted_sequential_results,
         formatted_parallel_results,
-        path,
+        path_bar_chart,
         "Latency",
         "Avg",
         "comparison_latency",
@@ -255,11 +269,46 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     plot_comparison_parallel_sequential(
         formatted_sequential_results,
         formatted_parallel_results,
-        path,
+        path_bar_chart,
         "Req/Sec",
         "Avg",
         "comparison_throughput",
         "Throughput in req/sec",
+    )
+    hdr_historgam_path = f"{path}/hdr_histogram"
+    plot_hdr_histogram(
+        formatted_sequential_results,
+        hdr_historgam_path,
+        "HdrHistogramm_comparison_sequential",
+    )
+    plot_hdr_histogram(
+        formatted_parallel_results,
+        hdr_historgam_path,
+        "HdrHistogramm_comparison_parallel",
+    )
+    endpoints = formatted_sequential_results.keys()
+    for endpoint in endpoints:
+        data = {
+            f"{endpoint}_sequencial": formatted_sequential_results[endpoint],
+            f"{endpoint}_parallel": formatted_parallel_results[endpoint],
+        }
+        plot_hdr_histogram(
+            data,
+            hdr_historgam_path,
+            f"{endpoint}_HdrHistogramm_comparison_sequential_parallel",
+        )
+    comparison_sequential_parallel = {}
+    for endpoint in endpoints:
+        comparison_sequential_parallel[
+            f"{endpoint}_sequencial"
+        ] = formatted_sequential_results[endpoint]
+        comparison_sequential_parallel[
+            f"{endpoint}_parallel"
+        ] = formatted_parallel_results[endpoint]
+    plot_hdr_histogram(
+        comparison_sequential_parallel,
+        hdr_historgam_path,
+        "HdrHistogramm_comparison_parallel_and_sequential",
     )
 
 
