@@ -1,14 +1,30 @@
 done = function(summary, latency, requests)
     io.write("latency_values:\n")
-    io.write(string.format('{"Min": %d, "Max": %d, "Avg": %d, "Stdev": %d}\n', latency.min, latency.max, latency.mean, latency.stdev))
+    io.write(
+        string.format(
+            '{"Min": %.3f, "Max": %.3f, "Avg": %.3f, "Stdev": %.3f}\n', 
+            (latency.min / 1000), 
+            (latency.max/ 1000), 
+            (latency.mean/ 1000), 
+            (latency.stdev/ 1000)
+            )
+        )
     io.write("request_values:\n")
-    io.write(string.format('{"Min": %d, "Max": %d, "Avg": %d, "Stdev": %d}\n', requests.min, requests.max, requests.mean, requests.stdev))
+    io.write(
+        string.format(
+            '{"Min": %d, "Max": %d, "Avg": %d, "Stdev": %d}\n', 
+            requests.min, 
+            requests.max, 
+            requests.mean, 
+            requests.stdev
+            )
+        )
     io.write("latency_distribution:\n{")
     for _, p in pairs({50, 75.000, 90, 99.000, 99.900 ,99.990, 99.999 }) do
         n = latency:percentile(p)
-        io.write(string.format('"%g%%": %d, ', p, n))
+        io.write(string.format('"%g%%": %.3f, ', p, (n / 1000)))
     end
-    io.write(string.format('"%g%%": %d }\n', 99.999999999, latency:percentile(99.999999999)))
+    io.write(string.format('"%g%%": %.3f }\n', 99.999999999, (latency:percentile(99.999999999) / 1000)))
     percentiles = {} 
     for i=1, 99 do
         percentiles[i] = i
@@ -17,8 +33,8 @@ done = function(summary, latency, requests)
     io.write('{"percentiles": [')
     for _, p in pairs(percentiles) do
         n = latency:percentile(p)
-        io.write(string.format(" %d,",n))
+        io.write(string.format(" %.3f,",(n / 1000)))
     end
-    io.write(string.format(" %d]}\n",latency:percentile(99.9999999)))
+    io.write(string.format(" %.3f]}\n", (latency:percentile(99.9999999) / 1000)))
 end
 

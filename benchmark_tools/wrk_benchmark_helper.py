@@ -112,7 +112,7 @@ def create_folder(name):
 def write_to_csv(sequential_data, parallel_data, path):
     """Write benchmark results to CSV file."""
     with open(f"{path}/wrk_throughput.csv", "w", newline="") as f:
-        filednames = ["Endpoints", "Avg", "Stdev", "Max", "+/- Stdev in %", "Mode"]
+        filednames = ["Endpoints", "Avg", "Stdev", "Max", "Mode"]
         csv_writer = writer(f, delimiter="|")
         csv_writer.writerow(filednames)
         sequential_rows = [
@@ -121,7 +121,6 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Req/Sec"]["Avg"],
                 results["Req/Sec"]["Stdev"],
                 results["Req/Sec"]["Max"],
-                results["Req/Sec"]["+/- Stdev in %"],
                 "sequential",
             ]
             for endpoint, results in sequential_data.items()
@@ -132,7 +131,6 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Req/Sec"]["Avg"],
                 results["Req/Sec"]["Stdev"],
                 results["Req/Sec"]["Max"],
-                results["Req/Sec"]["+/- Stdev in %"],
                 "parallel",
             ]
             for endpoint, results in parallel_data.items()
@@ -145,7 +143,6 @@ def write_to_csv(sequential_data, parallel_data, path):
             "Avg",
             "Stdev",
             "Max",
-            "+/- Stdev in %",
             "LD_50%",
             "LD_75%",
             "LD_90%",
@@ -164,15 +161,14 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Avg"],
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
-                results["Latency"]["+/- Stdev in %"],
-                results["Latency"]["latency_distribution"]["50%"],
-                results["Latency"]["latency_distribution"]["75%"],
-                results["Latency"]["latency_distribution"]["90%"],
-                results["Latency"]["latency_distribution"]["99%"],
-                results["Latency"]["latency_distribution"]["99.9%"],
-                results["Latency"]["latency_distribution"]["99.99%"],
-                results["Latency"]["latency_distribution"]["99.999%"],
-                results["Latency"]["latency_distribution"]["100%"],
+                results["latency_distribution"]["50%"],
+                results["latency_distribution"]["75%"],
+                results["latency_distribution"]["90%"],
+                results["latency_distribution"]["99%"],
+                results["latency_distribution"]["99.9%"],
+                results["latency_distribution"]["99.99%"],
+                results["latency_distribution"]["99.999%"],
+                results["latency_distribution"]["100%"],
                 "sequential",
             ]
             for endpoint, results in sequential_data.items()
@@ -183,15 +179,14 @@ def write_to_csv(sequential_data, parallel_data, path):
                 results["Latency"]["Avg"],
                 results["Latency"]["Stdev"],
                 results["Latency"]["Max"],
-                results["Latency"]["+/- Stdev in %"],
-                results["Latency"]["distribution"]["50%"],
-                results["Latency"]["distribution"]["75%"],
-                results["Latency"]["distribution"]["90%"],
-                results["Latency"]["distribution"]["99%"],
-                results["Latency"]["latency_distribution"]["99.9%"],
-                results["Latency"]["latency_distribution"]["99.99%"],
-                results["Latency"]["latency_distribution"]["99.999%"],
-                results["Latency"]["latency_distribution"]["100%"],
+                results["latency_distribution"]["50%"],
+                results["latency_distribution"]["75%"],
+                results["latency_distribution"]["90%"],
+                results["latency_distribution"]["99%"],
+                results["latency_distribution"]["99.9%"],
+                results["latency_distribution"]["99.99%"],
+                results["latency_distribution"]["99.999%"],
+                results["latency_distribution"]["100%"],
                 "parallel",
             ]
             for endpoint, results in parallel_data.items()

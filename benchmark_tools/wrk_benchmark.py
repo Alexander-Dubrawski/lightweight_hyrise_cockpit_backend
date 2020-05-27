@@ -13,14 +13,14 @@ from .wrk_benchmark_helper import (
 )
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_SECOUNDS = 30
-ENDPOINTS = ["workload", "database", "queue_length", "storage", "throughput", "latency"]
+DURATION_IN_SECOUNDS = 2
+ENDPOINTS = ["workload", "database", "queue_length", "throughput"]
 
 
 def execute_wrk_on_endpoint(url):
     """Background process to execute wrk."""
     return check_output(
-        f"wrk -t1 -c1 ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
+        f"wrk -t1 -c1 -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
         shell=True,
     ).decode("utf-8")
 
@@ -28,7 +28,7 @@ def execute_wrk_on_endpoint(url):
 def wrk_background_process(url, endpoint, shared_data):
     """Background process to execute wrk."""
     shared_data[endpoint] = check_output(
-        f"wrk -t1 -c1 ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
+        f"wrk -t1 -c1 -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {url}",
         shell=True,
     ).decode("utf-8")
 
