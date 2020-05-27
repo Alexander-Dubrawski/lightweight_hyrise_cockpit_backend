@@ -34,7 +34,67 @@ def plot_hdr_histogram(data, path, file_name):
     plt.title("Latency by Percentile Distribution")
     plt.grid()
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
+    plt.close(fig)
+
+
+def plot_box_chart(data, path, file_name):
+    fig = figure(num=None, figsize=(30, 20), dpi=80, facecolor="w", edgecolor="k")
+    colors = ["cornflowerblue", "darkcyan", "indianred", "sandybrown"]
+    position = 1
+    x_labels = []
+    for endpoint, results in data.items():
+        c = colors[position - 1]
+        data = results["latency_percentiles"]["percentiles"]
+        plt.boxplot(
+            data,
+            boxprops=dict(facecolor=c),
+            positions=[position],
+            patch_artist=True,
+            medianprops=dict(color="black"),
+            flierprops=dict(marker="d", markerfacecolor="grey"),
+        )
+        position += 1
+        x_labels.append(endpoint)
+    plt.xticks([(i + 1) for i in range(position)], x_labels)
+    plt.ylabel("Latency (milliseconds)")
+    plt.xlabel("Endpoints")
+    plt.title("Latency by milliseconds")
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
+    plt.close(fig)
+
+
+def plot_box_chart_compare_parralel_sequential(
+    data_sequential, data_parallel, path, file_name
+):
+    fig = figure(num=None, figsize=(30, 20), dpi=80, facecolor="w", edgecolor="k")
+    colors = ["cornflowerblue", "darkcyan", "indianred", "sandybrown"]
+    position = 0
+    color_index = 0
+    x_labels = []
+    for endpoint, results in data_sequential.items():
+        c = colors[color_index]
+        sequential = results["latency_percentiles"]["percentiles"]
+        parallel = data_parallel[endpoint]["latency_percentiles"]["percentiles"]
+        plt.boxplot(
+            [sequential, parallel],
+            boxprops=dict(facecolor=c),
+            positions=[position, position + 1],
+            patch_artist=True,
+            medianprops=dict(color="black"),
+            flierprops=dict(marker="d", markerfacecolor="grey"),
+        )
+        position += 2
+        x_labels.append(f"{endpoint}_sequential")
+        x_labels.append(f"{endpoint}_parallel")
+        color_index += 1
+    plt.xticks([(i) for i in range(position)], x_labels)
+    plt.ylabel("Latency (milliseconds)")
+    plt.xlabel("Endpoints")
+    plt.title("Latency by milliseconds")
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)
 
 
@@ -69,7 +129,7 @@ def plot_system_data(
     rows = [formatted_system_values]
     plot_matrix_sub_plot(row_labels, rows, components)
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)
 
 
@@ -110,7 +170,7 @@ def plot_comparison_parallel_sequential(
     plot_matrix_sub_plot(row_labels, rows, endpoints)
 
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)
 
 
@@ -144,5 +204,5 @@ def plot_bar_chart(data, path, metric_type, file_name, label):
     plot_matrix_sub_plot(row_labels, rows, endpoints)
 
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.png")
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)

@@ -12,6 +12,8 @@ from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
 from .graph_plotter import (
     plot_bar_chart,
+    plot_box_chart,
+    plot_box_chart_compare_parralel_sequential,
     plot_comparison_parallel_sequential,
     plot_hdr_histogram,
 )
@@ -112,6 +114,7 @@ def create_folder(name):
     mkdir(path)
     mkdir(f"{path}/hdr_histogram")
     mkdir(f"{path}/bar_charts")
+    mkdir(f"{path}/box_plot")
     return path
 
 
@@ -226,33 +229,31 @@ def write_to_csv(sequential_data, parallel_data, path):
         csv_writer.writerows(rows)
 
 
-def plot_results(path, formatted_sequential_results, formatted_parallel_results):
-    """Plots wrk results in bar charts."""
-    path_bar_chart = f"{path}/bar_charts"
+def plot_bar_charts(path, formatted_sequential_results, formatted_parallel_results):
     plot_bar_chart(
         formatted_sequential_results,
-        path_bar_chart,
+        path,
         "Latency",
         "sequenzial_latency",
         "Latency in ms",
     )
     plot_bar_chart(
         formatted_parallel_results,
-        path_bar_chart,
+        path,
         "Latency",
         "parallel_latency",
         "Latency in ms",
     )
     plot_bar_chart(
         formatted_sequential_results,
-        path_bar_chart,
+        path,
         "Req/Sec",
         "sequenzial_throughput",
         "Throughput in req/sec",
     )
     plot_bar_chart(
         formatted_parallel_results,
-        path_bar_chart,
+        path,
         "Req/Sec",
         "parallel_throughput",
         "Throughput in req/sec",
@@ -260,7 +261,7 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     plot_comparison_parallel_sequential(
         formatted_sequential_results,
         formatted_parallel_results,
-        path_bar_chart,
+        path,
         "Latency",
         "Avg",
         "comparison_latency",
@@ -269,22 +270,20 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     plot_comparison_parallel_sequential(
         formatted_sequential_results,
         formatted_parallel_results,
-        path_bar_chart,
+        path,
         "Req/Sec",
         "Avg",
         "comparison_throughput",
         "Throughput in req/sec",
     )
-    hdr_historgam_path = f"{path}/hdr_histogram"
+
+
+def plot_hdr_histograms(path, formatted_sequential_results, formatted_parallel_results):
     plot_hdr_histogram(
-        formatted_sequential_results,
-        hdr_historgam_path,
-        "HdrHistogramm_comparison_sequential",
+        formatted_sequential_results, path, "HdrHistogramm_comparison_sequential",
     )
     plot_hdr_histogram(
-        formatted_parallel_results,
-        hdr_historgam_path,
-        "HdrHistogramm_comparison_parallel",
+        formatted_parallel_results, path, "HdrHistogramm_comparison_parallel",
     )
     endpoints = formatted_sequential_results.keys()
     for endpoint in endpoints:
@@ -293,9 +292,7 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
             f"{endpoint}_parallel": formatted_parallel_results[endpoint],
         }
         plot_hdr_histogram(
-            data,
-            hdr_historgam_path,
-            f"{endpoint}_HdrHistogramm_comparison_sequential_parallel",
+            data, path, f"{endpoint}_HdrHistogramm_comparison_sequential_parallel",
         )
     comparison_sequential_parallel = {}
     for endpoint in endpoints:
@@ -307,8 +304,44 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
         ] = formatted_parallel_results[endpoint]
     plot_hdr_histogram(
         comparison_sequential_parallel,
-        hdr_historgam_path,
+        path,
         "HdrHistogramm_comparison_parallel_and_sequential",
+    )
+
+
+def plot_box_charts(path, formatted_sequential_results, formatted_parallel_results):
+    plot_box_chart(formatted_sequential_results, path, "Box_plot_comparison_sequential")
+    plot_box_chart(formatted_parallel_results, path, "Box_plot_comparison_parallel")
+    plot_box_chart_compare_parralel_sequential(
+        formatted_sequential_results,
+        formatted_parallel_results,
+        path,
+        "Box_plot_comparison_parallel_sequential",
+    )
+    endpoints = formatted_sequential_results.keys()
+    for endpoint in endpoints:
+        data = {
+            f"{endpoint}_sequencial": formatted_sequential_results[endpoint],
+            f"{endpoint}_parallel": formatted_parallel_results[endpoint],
+        }
+        plot_box_chart(
+            data, path, f"{endpoint}_Box_plot_comparison_sequential_parallel"
+        )
+
+
+def plot_results(path, formatted_sequential_results, formatted_parallel_results):
+    """Plots wrk results in bar charts."""
+    path_bar_chart = f"{path}/bar_charts"
+    plot_bar_charts(
+        path_bar_chart, formatted_sequential_results, formatted_parallel_results
+    )
+    hdr_historgam_path = f"{path}/hdr_histogram"
+    plot_hdr_histograms(
+        hdr_historgam_path, formatted_sequential_results, formatted_parallel_results
+    )
+    path_box_plot = f"{path}/box_plot"
+    plot_hdr_histograms(
+        path_box_plot, formatted_sequential_results, formatted_parallel_results
     )
 
 
