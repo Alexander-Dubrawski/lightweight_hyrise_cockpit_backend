@@ -193,6 +193,28 @@ def write_to_csv(sequential_data, parallel_data, path):
         ]
         csv_writer.writerows(sequential_rows)
         csv_writer.writerows(parallel_rows)
+    with open(f"{path}/wrk_percentiles_latency.csv", "w", newline="") as f:
+        endpoints = sequential_data.keys()
+        filednames = ["percentile"]
+        for endpoint in endpoints:
+            filednames.append(f"{endpoint}_sequencial")
+        for endpoint in endpoints:
+            filednames.append(f"{endpoint}_parallel")
+        rows = []
+        for i in range(100):
+            row = [i + 1]
+            row += [
+                sequential_data[endpoint]["latency_percentiles"]["percentiles"][i]
+                for endpoint in endpoints
+            ]
+            row += [
+                parallel_data[endpoint]["latency_percentiles"]["percentiles"][i]
+                for endpoint in endpoints
+            ]
+            rows.append(row)
+        csv_writer = writer(f, delimiter="|")
+        csv_writer.writerow(filednames)
+        csv_writer.writerows(rows)
 
 
 def plot_results(path, formatted_sequential_results, formatted_parallel_results):
