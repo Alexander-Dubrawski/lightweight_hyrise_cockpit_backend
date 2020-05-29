@@ -13,31 +13,32 @@ from .wrk_benchmark_helper import (
     write_to_csv,
 )
 
-NUMBER_DATABASES = 3
+NUMBER_DATABASES = [1, 2, 10]
 
 
-def execute_benchmark(handler):
-    for i in range(NUMBER_DATABASES):
+def execute_benchmark(handler, number_database):
+    for i in range(number_database):
         add_database(str(i))
     start_workload()
     start_workers()
     results = handler()
     stop_workers()
     stop_workload()
-    for i in range(NUMBER_DATABASES):
+    for i in range(number_database):
         remove_database(str(i))
     return results
 
 
 def run_benchmark():
-    sequential_results = execute_benchmark(run_wrk_sequential)
-    parallel_results = execute_benchmark(run_wrk_parallel)
-    print_results(sequential_results, parallel_results)
-    formatted_sequential_results = format_results(sequential_results)
-    formatted_parallel_results = format_results(parallel_results)
-    path = create_folder("user_wrk_benchmark")
-    plot_results(path, formatted_sequential_results, formatted_parallel_results)
-    write_to_csv(formatted_sequential_results, formatted_parallel_results, path)
+    for number_database in NUMBER_DATABASES:
+        sequential_results = execute_benchmark(run_wrk_sequential, number_database)
+        parallel_results = execute_benchmark(run_wrk_parallel, number_database)
+        print_results(sequential_results, parallel_results)
+        formatted_sequential_results = format_results(sequential_results)
+        formatted_parallel_results = format_results(parallel_results)
+        path = create_folder(f"user_wrk_benchmark_database_number_{number_database}")
+        plot_results(path, formatted_sequential_results, formatted_parallel_results)
+        write_to_csv(formatted_sequential_results, formatted_parallel_results, path)
 
 
 if __name__ == "__main__":

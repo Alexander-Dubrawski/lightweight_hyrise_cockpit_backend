@@ -38,14 +38,17 @@ def plot_hdr_histogram(data, path, file_name):
     plt.close(fig)
 
 
-def plot_box_chart(data, path, file_name):
+def plot_box_chart(data, path, file_name, precision=None):
     fig = figure(num=None, figsize=(30, 20), dpi=80, facecolor="w", edgecolor="k")
     colors = ["cornflowerblue", "darkcyan", "indianred", "sandybrown"]
     position = 1
     x_labels = []
     for endpoint, results in data.items():
         c = colors[position - 1]
-        data = results["latency_percentiles"]["percentiles"]
+        if precision:
+            data = results["latency_percentiles"]["percentiles"][:-precision]
+        else:
+            data = results["latency_percentiles"]["percentiles"]
         plt.boxplot(
             data,
             boxprops=dict(facecolor=c),
@@ -66,7 +69,7 @@ def plot_box_chart(data, path, file_name):
 
 
 def plot_box_chart_compare_parralel_sequential(
-    data_sequential, data_parallel, path, file_name
+    data_sequential, data_parallel, path, file_name, precision=None
 ):
     fig = figure(num=None, figsize=(30, 20), dpi=80, facecolor="w", edgecolor="k")
     colors = ["cornflowerblue", "darkcyan", "indianred", "sandybrown"]
@@ -75,8 +78,14 @@ def plot_box_chart_compare_parralel_sequential(
     x_labels = []
     for endpoint, results in data_sequential.items():
         c = colors[color_index]
-        sequential = results["latency_percentiles"]["percentiles"]
-        parallel = data_parallel[endpoint]["latency_percentiles"]["percentiles"]
+        if precision:
+            sequential = results["latency_percentiles"]["percentiles"][:-precision]
+            parallel = data_parallel[endpoint]["latency_percentiles"]["percentiles"][
+                :-precision
+            ]
+        else:
+            sequential = results["latency_percentiles"]["percentiles"]
+            parallel = data_parallel[endpoint]["latency_percentiles"]["percentiles"]
         plt.boxplot(
             [sequential, parallel],
             boxprops=dict(facecolor=c),

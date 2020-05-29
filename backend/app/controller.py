@@ -1,5 +1,4 @@
 """CLI used to start the backend API."""
-import logging
 from typing import Dict, List
 
 from flask import Flask, request
@@ -22,9 +21,6 @@ from .service import DatabaseService, WorkloadService
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
-
-log = logging.getLogger("werkzeug")
-log.setLevel(logging.ERROR)
 
 
 @api.route("/workload")

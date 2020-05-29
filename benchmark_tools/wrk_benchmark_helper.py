@@ -30,9 +30,7 @@ def add_database(database_id: str):
     """Add database."""
     body = {
         "id": database_id,
-        "host": "host",
-        "port": "port",
-        "number_workers": 10,
+        "number_workers": 4,
     }
     url = f"{BACKEND_URL}/database"
     return post(url, json=body)
@@ -114,7 +112,8 @@ def create_folder(name):
     mkdir(path)
     mkdir(f"{path}/hdr_histogram")
     mkdir(f"{path}/bar_charts")
-    mkdir(f"{path}/box_plot")
+    mkdir(f"{path}/box_plot_100")
+    mkdir(f"{path}/box_plot_95")
     return path
 
 
@@ -309,14 +308,21 @@ def plot_hdr_histograms(path, formatted_sequential_results, formatted_parallel_r
     )
 
 
-def plot_box_charts(path, formatted_sequential_results, formatted_parallel_results):
-    plot_box_chart(formatted_sequential_results, path, "Box_plot_comparison_sequential")
-    plot_box_chart(formatted_parallel_results, path, "Box_plot_comparison_parallel")
+def plot_box_charts(
+    path, formatted_sequential_results, formatted_parallel_results, percision=None
+):
+    plot_box_chart(
+        formatted_sequential_results, path, "Box_plot_comparison_sequential", percision
+    )
+    plot_box_chart(
+        formatted_parallel_results, path, "Box_plot_comparison_parallel", percision
+    )
     plot_box_chart_compare_parralel_sequential(
         formatted_sequential_results,
         formatted_parallel_results,
         path,
         "Box_plot_comparison_parallel_sequential",
+        percision,
     )
     endpoints = formatted_sequential_results.keys()
     for endpoint in endpoints:
@@ -325,7 +331,7 @@ def plot_box_charts(path, formatted_sequential_results, formatted_parallel_resul
             f"{endpoint}_parallel": formatted_parallel_results[endpoint],
         }
         plot_box_chart(
-            data, path, f"{endpoint}_Box_plot_comparison_sequential_parallel"
+            data, path, f"{endpoint}_Box_plot_comparison_sequential_parallel", percision
         )
 
 
@@ -339,9 +345,17 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     plot_hdr_histograms(
         hdr_historgam_path, formatted_sequential_results, formatted_parallel_results
     )
-    path_box_plot = f"{path}/box_plot"
-    plot_hdr_histograms(
+    path_box_plot = f"{path}/box_plot_100"
+    plot_box_charts(
         path_box_plot, formatted_sequential_results, formatted_parallel_results
+    )
+    path_box_plot = f"{path}/box_plot_95"
+    percision = 5
+    plot_box_charts(
+        path_box_plot,
+        formatted_sequential_results,
+        formatted_parallel_results,
+        percision,
     )
 
 
