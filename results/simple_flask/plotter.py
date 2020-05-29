@@ -1,19 +1,40 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.pyplot import figure
+
+colors = {
+    "running for 10s": "cornflowerblue",
+    "running for 30s": "darkcyan",
+    "running for 1m": "indianred",
+    "running for 2m": "sandybrown",
+    "running for 4m": "purple",
+    "running for 8m": "aqua",
+    "running for 16m": "magenta",
+    "mac running for 16m": "blue",
+    "vm running for 16m": "orange",
+}
+
+
+def plot_bar_chart(data, file_name, y_label, titel, label):
+    fig = figure(num=None, figsize=(30, 10), dpi=80, facecolor="w", edgecolor="k")
+    x_labels = []
+    width = 0.20
+    x_values = []
+    labels = data.keys()
+    ind = np.arange(len(labels))
+    for running_time, results in data.items():
+        x_labels.append(running_time)
+        x_values.append(results)
+    plt.bar(ind, x_values, width, label=label)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
+    plt.ylabel(y_label)
+    plt.title(titel)
+    plt.xticks(ind, labels)
+    plt.savefig(f"{file_name}_.pdf")
+    plt.close(fig)
 
 
 def plot_hdr_histogram(data, file_name):
-    colors = {
-        "running for 10s": "cornflowerblue",
-        "running for 30s": "darkcyan",
-        "running for 1m": "indianred",
-        "running for 2m": "sandybrown",
-        "running for 4m": "purple",
-        "running for 8m": "aqua",
-        "running for 16m": "magenta",
-        "mac running for 16m": "blue",
-        "vm running for 16m": "orange",
-    }
     fig = figure(num=None, figsize=(30, 10), dpi=80, facecolor="w", edgecolor="k")
     for running_time, results in data.items():
         x_values = []
@@ -207,8 +228,84 @@ data_mac_system_noise = {
     }
 }
 
+data_number_request_sequenzial = {
+    "running for 10s": 5770,
+    "running for 30s": 23214,
+    "running for 1m": 28893,
+    "running for 2m": 28834,
+    "running for 4m": 28816,
+    "running for 8m": 28929,
+    "running for 16m": 28964,
+}
+
+data_number_request_parallel = {
+    "running for 10s": 16798,
+    "running for 30s": 12318,
+    "running for 1m": 29063,
+    "running for 2m": 28890,
+    "running for 4m": 29137,
+    "running for 8m": 28989,
+    "running for 16m": 28891,
+}
+
+data_number_request_per_sec_sequenzial = {
+    "running for 10s": 578.46,
+    "running for 30s": 990,
+    "running for 1m": 860,
+    "running for 2m": 860,
+    "running for 4m": 860,
+    "running for 8m": 848,
+    "running for 16m": 840,
+}
+
+
+data_number_request_per_sec_parallel = {
+    "running for 10s": 561.84,
+    "running for 30s": 391.15,
+    "running for 1m": 457.80,
+    "running for 2m": 475.84,
+    "running for 4m": 476.52,
+    "running for 8m": 477.22,
+    "running for 16m": 477.99,
+}
+
+
 if __name__ == "__main__":
     plot_hdr_histogram(sequential_data, "sequential_wrk")  # type: ignore
     plot_hdr_histogram(parallel_data, "parallel_wrk")  # type: ignore
     plot_hdr_histogram(data_mac_system_noise, "mac_sequential_wrk")  # type: ignore
-    plot_hdr_histogram({"mac running for 16m": data_mac_system_noise["running for 16m"], "vm running for 16m": sequential_data["running for 16m"]}, "mac_vs_vm_wrk")  # type: ignore
+    plot_hdr_histogram(
+        {
+            "mac running for 16m": data_mac_system_noise["running for 16m"],
+            "vm running for 16m": sequential_data["running for 16m"],
+        },
+        "mac_vs_vm_wrk",
+    )  # type: ignore
+    plot_bar_chart(
+        data_number_request_sequenzial,
+        "number_request_sequenzial",
+        "Number of total Requests",
+        "Total number requests",
+        "Total number of request from benchmark",
+    )  # type: ignore
+    plot_bar_chart(
+        data_number_request_parallel,
+        "number_request_parallel",
+        "Number of total Requests",
+        "Total number requests",
+        "Total number of request from benchmark",
+    )  # type: ignore
+    plot_bar_chart(
+        data_number_request_per_sec_sequenzial,
+        "number_request_per_sec_sequenzial",
+        "Number of req/sec",
+        "req/sec",
+        "Req/sec of thread running time",
+    )  # type: ignore
+    plot_bar_chart(
+        data_number_request_per_sec_parallel,
+        "number_request_per_sec_parallel",
+        "Number of req/sec",
+        "req/sec",
+        "Req/sec of thread running time",
+    )  # type: ignore
