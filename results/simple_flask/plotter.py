@@ -9,8 +9,10 @@ def plot_hdr_histogram(data, file_name):
         "running for 1m": "indianred",
         "running for 2m": "sandybrown",
         "running for 4m": "purple",
-        "running for 8m": "magenta",
-        "running for 16m": "aqua",
+        "running for 8m": "aqua",
+        "running for 16m": "magenta",
+        "mac running for 16m": "blue",
+        "vm running for 16m": "orange",
     }
     fig = figure(num=None, figsize=(30, 10), dpi=80, facecolor="w", edgecolor="k")
     for running_time, results in data.items():
@@ -22,7 +24,7 @@ def plot_hdr_histogram(data, file_name):
         plt.plot(
             x_values, y_values, label=f"{running_time}", color=colors[running_time]
         )
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel("Latency (milliseconds)")
     plt.xlabel("Percentile")
     plt.title("Latency by Percentile Distribution")
@@ -191,6 +193,22 @@ parallel_data = {
     },
 }
 
+data_mac_system_noise = {
+    "running for 16m": {
+        "1%": 0.470,
+        "25%": 0.521,
+        "50%": 0.548,
+        "75%": 0.588,
+        "90%": 0.777,
+        "99%": 109.902,
+        "99.9%": 1319.000,
+        "99.99%": 1770.862,
+        "99.999%": 1858.774,
+    }
+}
+
 if __name__ == "__main__":
     plot_hdr_histogram(sequential_data, "sequential_wrk")  # type: ignore
     plot_hdr_histogram(parallel_data, "parallel_wrk")  # type: ignore
+    plot_hdr_histogram(data_mac_system_noise, "mac_sequential_wrk")  # type: ignore
+    plot_hdr_histogram({"mac running for 16m": data_mac_system_noise["running for 16m"], "vm running for 16m": sequential_data["running for 16m"]}, "mac_vs_vm_wrk")  # type: ignore
