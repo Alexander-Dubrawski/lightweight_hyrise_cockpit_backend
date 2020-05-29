@@ -13,8 +13,8 @@ from .wrk_benchmark_helper import (
 )
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_SECOUNDS = 120
-DURATION_IN_SECOUNDS_PARALLEL = 120
+DURATION_IN_SECOUNDS = 60
+DURATION_IN_SECOUNDS_PARALLEL = 60
 ENDPOINTS = ["workload", "database", "metric"]
 
 

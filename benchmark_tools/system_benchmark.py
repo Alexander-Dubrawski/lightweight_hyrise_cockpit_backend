@@ -12,7 +12,7 @@ from .system_benchmark_helper import (
 from .user_wrk_benchmark import execute_benchmark
 from .wrk_benchmark import run_wrk_parallel
 
-DURATION = 31
+DURATION = 62
 
 
 def top_background_process(component, pid, shared_data):

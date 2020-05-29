@@ -113,6 +113,7 @@ def create_folder(name):
     mkdir(f"{path}/hdr_histogram")
     mkdir(f"{path}/bar_charts")
     mkdir(f"{path}/box_plot_100")
+    mkdir(f"{path}/box_plot_99")
     mkdir(f"{path}/box_plot_95")
     return path
 
@@ -348,6 +349,14 @@ def plot_results(path, formatted_sequential_results, formatted_parallel_results)
     path_box_plot = f"{path}/box_plot_100"
     plot_box_charts(
         path_box_plot, formatted_sequential_results, formatted_parallel_results
+    )
+    path_box_plot = f"{path}/box_plot_99"
+    percision = 1
+    plot_box_charts(
+        path_box_plot,
+        formatted_sequential_results,
+        formatted_parallel_results,
+        percision,
     )
     path_box_plot = f"{path}/box_plot_95"
     percision = 5
