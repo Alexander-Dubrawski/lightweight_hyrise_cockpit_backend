@@ -52,7 +52,6 @@ class DatabaseManager(object):
             "get databases": self._call_get_databases,
             "get queue length": self._call_get_queue_length,
             "status": self._call_status,
-            "execute sql query": self._call_execute_sql_query,
         }
 
     def _call_add_database(self, body: Body) -> Response:
@@ -62,8 +61,6 @@ class DatabaseManager(object):
 
         db_instance = Database(
             body["id"],
-            body["host"],
-            body["port"],
             body["number_workers"],
             "tcp://{:s}:{:s}".format(
                 self._workload_sub_host, self._workload_pubsub_port,
@@ -75,12 +72,7 @@ class DatabaseManager(object):
     def _call_get_databases(self, body: Body) -> Response:
         """Get list of all databases."""
         databases = [
-            {
-                "id": id,
-                "host": database.connection_information["host"],
-                "port": database.connection_information["port"],
-                "number_workers": database.number_workers,
-            }
+            {"id": id, "number_workers": database.number_workers}
             for id, database in self._databases.items()
         ]
         response = get_response(200)
@@ -122,16 +114,6 @@ class DatabaseManager(object):
             if not database.close_worker():
                 return get_response(400)
         return get_response(200)
-
-    def _call_execute_sql_query(self, body: Body) -> Response:
-        database_id: str = body["id"]
-        query: str = body["query"]
-        if database_id not in self._databases.keys():
-            return get_response(404)
-        results = self._databases[database_id].execute_sql_query(query)
-        response = get_response(200)
-        response["body"]["results"] = results
-        return response
 
     def _call_get_queue_length(self, body: Body) -> Response:
         response = get_response(200)

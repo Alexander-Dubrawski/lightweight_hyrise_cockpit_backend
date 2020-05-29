@@ -1,5 +1,6 @@
 """CLI used to start the backend API."""
-from typing import Dict, List, Optional, Union
+import logging
+from typing import Dict, List
 
 from flask import Flask, request
 from flask.wrappers import Response
@@ -7,23 +8,13 @@ from flask_accepts import accepts, responds
 from flask_cors import CORS
 from flask_restx import Api, Resource
 
-from .interface import (
-    DatabaseInterface,
-    DetailedDatabaseInterface,
-    SqlQueryInterface,
-    WorkloadInterface,
-)
-from .model import DetailedDatabase, QueueLength, SqlResponse, Status, Workload
+from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
+from .model import DetailedDatabase, Status, Workload
 from .schema import (
     DatabaseSchema,
     DetailedDatabaseSchema,
-    LatencySchema,
-    QueueLengthSchema,
-    SqlQuerySchema,
-    SqlResponseSchema,
+    MetricSchema,
     StatusSchema,
-    StorageSchema,
-    ThroughputSchema,
     WorkloadSchema,
 )
 from .service import DatabaseService, WorkloadService
@@ -31,6 +22,9 @@ from .service import DatabaseService, WorkloadService
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
+
+log = logging.getLogger("werkzeug")
+log.setLevel(logging.ERROR)
 
 
 @api.route("/workload")
@@ -67,10 +61,7 @@ class DatabasesController(Resource):
     def post(self) -> Response:
         """Register new database."""
         interface: DetailedDatabaseInterface = DetailedDatabaseInterface(
-            id=request.parsed_obj.id,
-            host=request.parsed_obj.host,
-            port=request.parsed_obj.port,
-            number_workers=request.parsed_obj.number_workers,
+            id=request.parsed_obj.id, number_workers=request.parsed_obj.number_workers,
         )
         status_code = DatabaseService.register_database(interface)
         return Response(status=status_code)
@@ -108,59 +99,11 @@ class StatusController(Resource):
         return DatabaseService.get_status()
 
 
-@api.route("/sql")
-class SqlController(Resource):
-    """Execute SQL query on database."""
-
-    @api.response(404, "Database not found.")
-    @accepts(schema=SqlQuerySchema, api=api)
-    @responds(schema=SqlResponseSchema, api=api)
-    def post(self) -> Union[Optional[Response], SqlResponse]:
-        """Execute SQL query."""
-        interface: SqlQueryInterface = SqlQueryInterface(
-            id=request.parsed_obj.id, query=request.parsed_obj.query
-        )
-        response, status_code = DatabaseService.execute_sql(interface)
-        if status_code == 200:
-            return response
-        return Response(status=status_code)
-
-
-@api.route("/storage")
-class StorgaeController(Resource):
+@api.route("/metric")
+class MetricController(Resource):
     """Return storage information of database."""
 
-    @responds(schema=StorageSchema(many=True), api=api)
+    @responds(schema=MetricSchema(many=True), api=api)
     def get(self) -> List[Dict]:
         """Return storage information for all databases."""
-        return DatabaseService.get_storage()
-
-
-@api.route("/throughput")
-class ThroughputController(Resource):
-    """Return throughput information of database."""
-
-    @responds(schema=ThroughputSchema(many=True), api=api)
-    def get(self) -> List[Dict]:
-        """Return throughput information for all databases."""
-        return DatabaseService.get_throughput()
-
-
-@api.route("/latency")
-class LatencyController(Resource):
-    """Return throughput information of database."""
-
-    @responds(schema=LatencySchema(many=True), api=api)
-    def get(self) -> List[Dict]:
-        """Return throughput information for all databases."""
-        return DatabaseService.get_latency()
-
-
-@api.route("/queue_length")
-class QueueLengthController(Resource):
-    """Return Queue length of database."""
-
-    @responds(schema=QueueLengthSchema(many=True), api=api)
-    def get(self) -> List[QueueLength]:
-        """Return throughput information for all databases."""
-        return DatabaseService.get_queue_length()
+        return DatabaseService.get_metric()

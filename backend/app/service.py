@@ -1,17 +1,12 @@
 """Service for back-end api."""
 from time import sleep
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from backend.request import Header, Request
 from backend.response import Response
 
-from .interface import (
-    DatabaseInterface,
-    DetailedDatabaseInterface,
-    SqlQueryInterface,
-    WorkloadInterface,
-)
-from .model import DetailedDatabase, QueueLength, SqlResponse, Status, Workload
+from .interface import DatabaseInterface, DetailedDatabaseInterface, WorkloadInterface
+from .model import DetailedDatabase, Status, Workload
 from .socket_manager import GeneratorSocket, ManagerSocket
 
 
@@ -114,53 +109,18 @@ class DatabaseService:
         return [Status(**interface) for interface in response["body"]["status"]]
 
     @classmethod
-    def execute_sql(cls, interface: SqlQueryInterface) -> Tuple:
-        """Execute sql query."""
-        response = cls._send_message_to_dbm(
-            Request(header=Header(message="execute sql query"), body=dict(interface))
-        )
-        if response["header"]["status"] == 200:
-            return (
-                SqlResponse(**response["body"]["results"]),
-                200,
-            )
-        return response["header"]["status"]
-
-    @classmethod
-    def get_storage(cls) -> List[Dict]:
+    def get_metric(cls) -> List[Dict]:
         """Get storage information from databases."""
         databases = DatabaseService.get_databases()
         # Do some work (access inluxDB)
         sleep(0.001)
-        fake_storage_information = {
+        fake_metric_information = {
             "customer": {"size": 10000, "number_columns": 2},
             "supplier": {"size": 400, "number_columns": 1},
+            "throughput": 42,
+            "latency": 42,
         }
         return [
-            {"id": database.id, "results": fake_storage_information}
+            {"id": database.id, "results": fake_metric_information}
             for database in databases
         ]
-
-    @classmethod
-    def get_throughput(cls) -> List[Dict]:
-        """Get throughput from databases."""
-        databases = DatabaseService.get_databases()
-        # Do some work (access inluxDB)
-        sleep(0.001)
-        return [{"id": database.id, "throughput": 42} for database in databases]
-
-    @classmethod
-    def get_latency(cls) -> List[Dict]:
-        """Get latency from databases."""
-        databases = DatabaseService.get_databases()
-        # Do some work (access inluxDB)
-        sleep(0.001)
-        return [{"id": database.id, "latency": 0.2} for database in databases]
-
-    @classmethod
-    def get_queue_length(cls) -> List[QueueLength]:
-        """Get queue length from databases."""
-        response = cls._send_message_to_dbm(
-            Request(header=Header(message="get queue length"), body={})
-        )
-        return [QueueLength(**interface) for interface in response["body"]["databases"]]

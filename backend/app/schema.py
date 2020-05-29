@@ -1,9 +1,9 @@
 """Schema for back-end api."""
 
 from marshmallow import Schema, post_load
-from marshmallow.fields import Dict, Float, Integer, List, String
+from marshmallow.fields import Dict, Integer, String
 
-from .model import Database, DetailedDatabase, SqlQuery, SqlResponse
+from .model import Database, DetailedDatabase
 
 
 class WorkloadSchema(Schema):
@@ -40,18 +40,6 @@ class DetailedDatabaseSchema(Schema):
         required=True,
         example="hyrise-1",
     )
-    host = String(
-        title="Host",
-        description="Host to log in to.",
-        required=True,
-        example="vm.example.com",
-    )
-    port = String(
-        title="Port",
-        description="Port of the host to log in to.",
-        required=True,
-        example="1234",
-    )
     number_workers = Integer(
         title="Number of initial database worker processes.",
         description="",
@@ -82,52 +70,7 @@ class StatusSchema(Schema):
     )
 
 
-class SqlQuerySchema(Schema):
-    """Schema of a SQL query."""
-
-    id = String(
-        title="Database ID",
-        description="Used to identify a database.",
-        required=True,
-        example="hyrise-1",
-    )
-    query = String(
-        title="SQL query",
-        description="Sql query to execute on database.",
-        required=True,
-        example="SELECT 1;",
-    )
-
-    @post_load
-    def make_sql_query(self, data, **kwargs):
-        """Return SqlQuery object."""
-        return SqlQuery(**data)
-
-
-class SqlResponseSchema(Schema):
-    """Schema of a SQL response."""
-
-    id = String(
-        title="Database ID",
-        description="Used to identify a database.",
-        required=True,
-        example="hyrise-1",
-    )
-    results = List(
-        List(String()),
-        title="Results",
-        description="Results from query execution.",
-        required=True,
-        example=[["1", "100", "first"], ["2", "None", "second"], ["3", "42", "third"]],
-    )
-
-    @post_load
-    def make_sql_query(self, data, **kwargs):
-        """Return SqlResponse object."""
-        return SqlResponse(**data)
-
-
-class StorageSchema(Schema):
+class MetricSchema(Schema):
     """Schema of a storage response."""
 
     id = String(
@@ -138,55 +81,4 @@ class StorageSchema(Schema):
     )
     results = Dict(
         title="Storage information", description="Storage usage.", required=True,
-    )
-
-
-class ThroughputSchema(Schema):
-    """Schema of a throughput response."""
-
-    id = String(
-        title="Database ID",
-        description="Used to identify a database.",
-        required=True,
-        example="hyrise-1",
-    )
-    throughput = Integer(
-        title="Throughput information",
-        description="Throughput of the last second.",
-        required=True,
-        example=200,
-    )
-
-
-class LatencySchema(Schema):
-    """Schema of a latency response."""
-
-    id = String(
-        title="Database ID",
-        description="Used to identify a database.",
-        required=True,
-        example="hyrise-1",
-    )
-    latency = Float(
-        title="Latency information",
-        description="Latency of the last second.",
-        required=True,
-        example=0.1,
-    )
-
-
-class QueueLengthSchema(Schema):
-    """Schema of a queue length response."""
-
-    id = String(
-        title="Database ID",
-        description="Used to identify a database.",
-        required=True,
-        example="hyrise-1",
-    )
-    queue_length = Integer(
-        title="Queue length",
-        description="Number of elements in queue.",
-        required=True,
-        example=500,
     )

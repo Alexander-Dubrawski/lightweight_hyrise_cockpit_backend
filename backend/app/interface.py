@@ -1,6 +1,6 @@
 """Interface for back-end api."""
 
-from typing import List, TypedDict
+from typing import TypedDict
 
 
 class WorkloadInterface(TypedDict):
@@ -19,23 +19,4 @@ class DatabaseInterface(TypedDict):
 class DetailedDatabaseInterface(DatabaseInterface):
     """Interface of a detailed database."""
 
-    host: str
-    port: str
     number_workers: int
-    dbname: str
-    user: str
-    password: str
-
-
-class SqlQueryInterface(TypedDict):
-    """Interface of a Sql query."""
-
-    id: str
-    query: str
-
-
-class SqlResponseInterface(TypedDict):
-    """Interface of a SQL query response."""
-
-    id: str
-    results: List[List[str]]
