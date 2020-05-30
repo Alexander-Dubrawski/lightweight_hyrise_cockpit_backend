@@ -1,5 +1,4 @@
 """Service for back-end api."""
-from time import sleep
 from typing import Dict, List
 
 from backend.request import Header, Request
@@ -109,18 +108,38 @@ class DatabaseService:
         return [Status(**interface) for interface in response["body"]["status"]]
 
     @classmethod
-    def get_metric(cls) -> List[Dict]:
-        """Get storage information from databases."""
-        databases = DatabaseService.get_databases()
-        # Do some work (access inluxDB)
-        sleep(0.001)
+    def get_time_intense_metric(cls) -> Dict:
+        """Get computer intense metric from manager."""
+        _ = cls._send_message_to_dbm(
+            Request(header=Header(message="get time intense metric"), body={})
+        )
         fake_metric_information = {
             "customer": {"size": 10000, "number_columns": 2},
             "supplier": {"size": 400, "number_columns": 1},
             "throughput": 42,
             "latency": 42,
         }
-        return [
-            {"id": database.id, "results": fake_metric_information}
-            for database in databases
-        ]
+        return {"id": "foo", "results": fake_metric_information}
+
+    @classmethod
+    def get_metric(cls) -> Dict:
+        _ = cls._send_message_to_dbm(
+            Request(header=Header(message="get metric"), body={})
+        )
+        fake_metric_information = {
+            "customer": {"size": 10000, "number_columns": 2},
+            "supplier": {"size": 400, "number_columns": 1},
+            "throughput": 42,
+            "latency": 42,
+        }
+        return {"id": "foo", "results": fake_metric_information}
+
+    @classmethod
+    def get_flask_metric(cls) -> Dict:
+        fake_metric_information = {
+            "customer": {"size": 10000, "number_columns": 2},
+            "supplier": {"size": 400, "number_columns": 1},
+            "throughput": 42,
+            "latency": 42,
+        }
+        return {"id": "foo", "results": fake_metric_information}

@@ -95,11 +95,31 @@ class StatusController(Resource):
         return DatabaseService.get_status()
 
 
-@api.route("/metric")
-class MetricController(Resource):
+@api.route("/manager_time_intense_metric")
+class ManagerTimeIntenseMetricController(Resource):
     """Return storage information of database."""
 
-    @responds(schema=MetricSchema(many=True), api=api)
+    @responds(schema=MetricSchema, api=api)
+    def get(self) -> List[Dict]:
+        """Return storage information for all databases."""
+        return DatabaseService.get_time_intense_metric()
+
+
+@api.route("/manager_metric")
+class ManagerMetricController(Resource):
+    """Return storage information of database."""
+
+    @responds(schema=MetricSchema, api=api)
     def get(self) -> List[Dict]:
         """Return storage information for all databases."""
         return DatabaseService.get_metric()
+
+
+@api.route("/flask_metric")
+class FlaskMetricController(Resource):
+    """Return storage information of database."""
+
+    @responds(schema=MetricSchema, api=api)
+    def get(self) -> List[Dict]:
+        """Return storage information for all databases."""
+        return DatabaseService.get_flask_metric()

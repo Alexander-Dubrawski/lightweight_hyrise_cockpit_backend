@@ -1,5 +1,6 @@
 """Module for managing databases."""
 
+from time import sleep
 from types import TracebackType
 from typing import Callable, Dict, Optional, Tuple, Type
 
@@ -52,6 +53,8 @@ class DatabaseManager(object):
             "get databases": self._call_get_databases,
             "get queue length": self._call_get_queue_length,
             "status": self._call_status,
+            "get time intense metric": self._call_time_intense_metric,
+            "get metric": self._call_metric,
         }
 
     def _call_add_database(self, body: Body) -> Response:
@@ -121,6 +124,18 @@ class DatabaseManager(object):
             {"id": id, "queue_length": database.get_queue_length()}
             for id, database in self._databases.items()
         ]
+        return response
+
+    def _call_time_intense_metric(self, body: Body) -> Response:
+        # do some work
+        sleep(0.5)
+        response = get_response(200)
+        return response
+
+    def _call_metric(self, body: Body) -> Response:
+        # do some work
+        sleep(0.001)
+        response = get_response(200)
         return response
 
     def start(self) -> None:
