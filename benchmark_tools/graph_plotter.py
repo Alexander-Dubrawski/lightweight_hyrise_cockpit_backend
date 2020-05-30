@@ -28,7 +28,7 @@ def plot_hdr_histogram(data, path, file_name):
             x_values.append(percentile)
             y_values.append(value)
         plt.plot(x_values, y_values, label=f"{component}")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel("Latency (milliseconds)")
     plt.xlabel("Percentile")
     plt.title("Latency by Percentile Distribution")
@@ -130,7 +130,7 @@ def plot_system_data(
             f"{round(statistical_method(results['usage']), 2)}%"
         )
         components.append(component)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel(y_label)
     plt.xlabel("time")
     plt.title(measurement_type)
@@ -160,7 +160,7 @@ def plot_comparison_parallel_sequential(
     plt.bar(
         ind + width, sequential_values, width, label=f"sequenzial {comparison_type}"
     )
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel(label)
     plt.xlabel("Endpoints")
     plt.title(f"{comparison_type} {metric_type} per endpoint")
@@ -200,7 +200,7 @@ def plot_bar_chart(data, path, metric_type, file_name, label):
     plt.bar(ind, stdev_values, width, label="Stdev")
     plt.bar(ind + width, avg_values, width, label="Avg")
     plt.bar(ind + (2 * width), max_values, width, label="Max")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel(label)
     plt.xlabel("Endpoints")
     plt.title(f"{metric_type} per endpoint")

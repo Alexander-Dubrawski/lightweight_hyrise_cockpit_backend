@@ -128,7 +128,7 @@ class DatabaseManager(object):
 
     def _call_time_intense_metric(self, body: Body) -> Response:
         # do some work
-        sleep(0.5)
+        sleep(0.2)
         response = get_response(200)
         return response
 
