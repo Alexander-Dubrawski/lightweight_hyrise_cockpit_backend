@@ -19,7 +19,7 @@ def plot_matrix_sub_plot(row_labels, rows, col_labels):
     plt.subplots_adjust(left=0.2, bottom=0.2)
 
 
-def plot_hdr_histogram(data, path, file_name):
+def plot_hdr_histogram(data, path, file_name, title_name=None):
     fig = figure(num=None, figsize=(30, 10), dpi=80, facecolor="w", edgecolor="k")
     for component, results in data.items():
         x_values = ["0%"]
@@ -31,7 +31,10 @@ def plot_hdr_histogram(data, path, file_name):
     plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel("Latency (milliseconds)")
     plt.xlabel("Percentile")
-    plt.title("Latency by Percentile Distribution")
+    if title_name:
+        plt.title(title_name)
+    else:
+        plt.title("Latency by Percentile Distribution")
     plt.grid()
     ts = timegm(gmtime())
     plt.savefig(f"{path}/{file_name}_{ts}.pdf")
@@ -183,7 +186,9 @@ def plot_comparison_parallel_sequential(
     plt.close(fig)
 
 
-def plot_bar_chart(data, path, metric_type, file_name, label):
+def plot_bar_chart(
+    data, path, metric_type, file_name, label, x_label=None, title_name=None
+):
     endpoints = []
     avg_values = []
     stdev_values = []
@@ -202,8 +207,14 @@ def plot_bar_chart(data, path, metric_type, file_name, label):
     plt.bar(ind + (2 * width), max_values, width, label="Max")
     plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel(label)
-    plt.xlabel("Endpoints")
-    plt.title(f"{metric_type} per endpoint")
+    if x_label:
+        plt.xlabel(x_label)
+    else:
+        plt.xlabel("Endpoints")
+    if title_name:
+        plt.title(title_name)
+    else:
+        plt.title(f"{metric_type} per endpoint")
     plt.xticks(ind + width, endpoints)
     if metric_type == "Latency":
         row_labels = ["Avg in ms", "Stdev in ms", "Max in ms"]

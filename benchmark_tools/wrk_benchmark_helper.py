@@ -395,10 +395,10 @@ def plot_results(
         comparison_parallel[endpoint] = {}
         for number_client in number_clients:
             comparison_sequential[endpoint][
-                f"number clients {number_client}"
+                f"number of clients: {number_client}"
             ] = formatted_sequential_results[number_client][endpoint]
             comparison_parallel[endpoint][
-                f"number clients {number_client}"
+                f"number of clients: {number_client}"
             ] = formatted_parallel_results[number_client][endpoint]
 
     for endpoint, results in comparison_parallel.items():
@@ -408,6 +408,8 @@ def plot_results(
             "Latency",
             f"{endpoint}_parallel_latency_client_comparison",
             "Latency in ms",
+            "",
+            f"{endpoint} number of clients latency comparison",
         )
         plot_bar_chart(
             results,
@@ -415,11 +417,14 @@ def plot_results(
             "Req/Sec",
             f"{endpoint}_parallel_throughput_client_comparison",
             "Throughput in req/sec",
+            "",
+            f"{endpoint} number of clients throughput comparison",
         )
         plot_hdr_histogram(
             results,
             f"{path}/client_comparison_hdr_histogram",
             f"{endpoint}_parallel_HdrHistogramm_comparison",
+            f"{endpoint} Latency by Percentile Distribution per number of clients",
         )
 
     for endpoint, results in comparison_sequential.items():
@@ -429,6 +434,8 @@ def plot_results(
             "Latency",
             f"{endpoint}_sequential_latency_client_comparison",
             "Latency in ms",
+            "",
+            f"{endpoint} number of clients latency comparison",
         )
         plot_bar_chart(
             results,
@@ -436,11 +443,14 @@ def plot_results(
             "Req/Sec",
             f"{endpoint}_sequential_throughput_client_comparison",
             "Throughput in req/sec",
+            "",
+            f"{endpoint} number of clients throughput comparison",
         )
         plot_hdr_histogram(
             results,
             f"{path}/client_comparison_hdr_histogram",
             f"{endpoint}_sequential_HdrHistogramm_comparison",
+            f"{endpoint} Latency by Percentile Distribution per number of clients",
         )
 
 
