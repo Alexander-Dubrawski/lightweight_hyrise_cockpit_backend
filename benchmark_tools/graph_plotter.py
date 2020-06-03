@@ -119,7 +119,8 @@ def plot_system_data(
     statistical_method_description,
     y_label,
 ):
-    fig = figure(num=None, figsize=(30, 15), dpi=80, facecolor="w", edgecolor="k")
+    fig = figure(num=None, figsize=(30, 15), dpi=300, facecolor="w", edgecolor="k")
+    plt.rcParams.update({"font.size": 22})
     formatted_system_values = []
     components = []
     for component, results in data.items():
@@ -129,17 +130,12 @@ def plot_system_data(
         plt.plot(
             formatted_usage, results["usage"], label=f"{component} {measurement_type}",
         )
-        formatted_system_values.append(
-            f"{round(statistical_method(results['usage']), 2)}%"
-        )
+        formatted_system_values.append([f"{result}%" for result in results["usage"]])
         components.append(component)
-    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0)
     plt.ylabel(y_label)
     plt.xlabel("time")
     plt.title(measurement_type)
-    row_labels = [statistical_method_description]
-    rows = [formatted_system_values]
-    plot_matrix_sub_plot(row_labels, rows, components)
+    plot_matrix_sub_plot(component, formatted_system_values, formatted_usage)
     ts = timegm(gmtime())
     plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)
