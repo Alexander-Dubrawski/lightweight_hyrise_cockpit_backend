@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib.pyplot import figure
 
 
-def plot_sub_bar_chart(ax, data, endpoint, metric_type, label):
+def plot_sub_bar_chart(ax, data, endpoint, metric_type, label, x_label):
     clients = []
     avg_values = []
     stdev_values = []
@@ -24,7 +24,7 @@ def plot_sub_bar_chart(ax, data, endpoint, metric_type, label):
     ax.bar(ind + (2 * width), max_values, width, label="Max")
     ax.legend()
     ax.set_ylabel(label)
-    ax.set_xlabel("Clients")
+    ax.set_xlabel(x_label)
     ax.set_title(f"{metric_type} for {endpoint}")
     ax.set_xticks(ind + width, minor=False)
     ax.set_xticklabels(clients, fontdict=None, minor=False)
@@ -39,29 +39,31 @@ def plot_sub_bar_chart(ax, data, endpoint, metric_type, label):
 
 
 def plot_bar_chart_for_endpoint(
-    data, path, metric_type, file_name, label, enpoints, x_label=None
+    data, path, metric_type, file_name, label, enpoints, x_label
 ):
     endpoint_one, endpoint_two = enpoints
     plt.rcParams.update({"font.size": 22})
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(30, 20), dpi=300, facecolor="w", edgecolor="k"
+        2, 1, figsize=(30, 30), dpi=300, facecolor="w", edgecolor="k"
     )
-    plot_sub_bar_chart(ax1, data, endpoint_one, metric_type, label)
-    plot_sub_bar_chart(ax2, data, endpoint_two, metric_type, label)
+    plot_sub_bar_chart(ax1, data, endpoint_one, metric_type, label, x_label)
+    plot_sub_bar_chart(ax2, data, endpoint_two, metric_type, label, x_label)
     plt.tight_layout()
     ts = timegm(gmtime())
     plt.savefig(f"{path}/{file_name}_{ts}.pdf")
     plt.close(fig)
 
 
-def plot_hdr_histogram_for_endpoint(results, path, file_name, title_name=None):
-    fig = figure(num=None, figsize=(30, 20), dpi=300, facecolor="w", edgecolor="k")
+def plot_hdr_histogram_for_endpoint(
+    results, path, file_name, label_type, title_name=None
+):
+    fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
         f"{percentile}th"
         for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
     ]
-    linestyles = {1: "-", 2: ":", 8: "-.", 16: "__"}
+    linestyles = {1: "-", 2: ":", 8: "-.", 16: "__", 10: "-."}
     component_color = {
         "manager_metric": "orange",
         "flask_metric": "blue",
@@ -69,9 +71,9 @@ def plot_hdr_histogram_for_endpoint(results, path, file_name, title_name=None):
     }
     rows = []
     row_labels = []
-    for number_clinet, data in results.items():
+    for number, data in results.items():
         for component, results in data.items():
-            row_labels.append(f"{component} & clients {number_clinet}")
+            row_labels.append(f"{component} & {number} {label_type}")
             row = []
             x_values = []
             y_values = []
@@ -83,8 +85,8 @@ def plot_hdr_histogram_for_endpoint(results, path, file_name, title_name=None):
             plt.plot(
                 x_values,
                 y_values,
-                label=f"{component} & clients {number_clinet}",
-                linestyle=linestyles[number_clinet],
+                label=f"{component} & {number} {label_type}",
+                linestyle=linestyles[number],
                 linewidth=4.0,
                 color=component_color[component],
             )

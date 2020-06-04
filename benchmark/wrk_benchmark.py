@@ -4,17 +4,26 @@ from subprocess import check_output
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
+from .system_benchmark import format_data, monitor_system
 from .wrk_benchmark_helper import (
+    add_database,
     create_folder,
     format_results,
-    plot_theoretical_charts,
+    plot_charts,
     print_results,
+    print_user_results,
+    remove_database,
+    start_workers,
+    start_workload,
+    stop_workers,
+    stop_workload,
 )
 
 NUMBER_CLIENTS = [1, 2, 8]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_SECOUNDS = 1
-DURATION_IN_SECOUNDS_PARALLEL = 1
+DURATION_IN_SECOUNDS = 10
+DURATION_IN_SECOUNDS_PARALLEL = 10
+NUMBER_DATABASES = [1, 2, 10]
 ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
 
 
@@ -75,30 +84,80 @@ def run_wrk_parallel(enpoints):
     return parallel_results
 
 
+def execute_in_user_context(number_database):
+    manager = Manager()
+    parallel_results = {}
+    shard_dict = manager.dict()
+    for i in range(number_database):
+        add_database(str(i))
+    start_workload()
+    start_workers()
+    processes = create_wrk_processes(shard_dict, 1, ["manager_metric", "flask_metric"])
+    for process in processes:
+        process.start()
+    monitor_system_data = monitor_system(DURATION_IN_SECOUNDS)
+    for process in processes:
+        process.join()
+        process.terminate()
+    stop_workers()
+    stop_workload()
+    for i in range(number_database):
+        remove_database(str(i))
+    for key, value in shard_dict.items():
+        parallel_results[key] = value
+    return (parallel_results, monitor_system_data)
+
+
+def run_user_benchmark(number_databases):
+    results = {}
+    system_data = {}
+    for number_database in number_databases:
+        parallel_results, monitor_system_data = execute_in_user_context(number_database)
+        results[number_database] = parallel_results
+        system_data[number_database] = monitor_system_data
+    return (results, system_data)
+
+
 def run_benchmark():
     """Run sequential and parallel wrk benchmark on endpoints."""
     sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"])
     parallel_results = run_wrk_parallel(
         ["manager_time_intense_metric", "manager_metric"]
     )
-    print_results(sequential_results, parallel_results, NUMBER_CLIENTS)
+    user_results, system_data = run_user_benchmark(NUMBER_DATABASES)
 
+    print_results(sequential_results, parallel_results, NUMBER_CLIENTS)
+    print_user_results(user_results)
+
+    formatted_user_results = format_results(user_results)
     formatted_sequential_results = format_results(sequential_results)
     formatted_parallel_results = format_results(parallel_results)
+    formatted_system_data = format_data(system_data)
+
+    _ = formatted_system_data
 
     path = create_folder("wrk_benchmark")
 
-    plot_theoretical_charts(
+    plot_charts(
         formatted_sequential_results,
         path,
         ("manager_metric", "flask_metric"),
         "theoretical_sequential",
+        "clients",
     )
-    plot_theoretical_charts(
+    plot_charts(
         formatted_parallel_results,
         path,
-        ("manager_metric", "flask_metric"),
+        ("manager_metric", "manager_time_intense_metric"),
         "theoretical_parallel",
+        "clients",
+    )
+    plot_charts(
+        formatted_user_results,
+        path,
+        ("manager_metric", "flask_metric"),
+        "user",
+        "database objects",
     )
 
 

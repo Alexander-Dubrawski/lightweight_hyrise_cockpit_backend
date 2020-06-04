@@ -4,7 +4,55 @@ from json import loads
 from os import mkdir
 from time import gmtime
 
+from requests import delete, post
+
+from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
+
 from .graph_plotter import plot_bar_chart_for_endpoint, plot_hdr_histogram_for_endpoint
+
+BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
+
+
+def add_database(database_id: str):
+    """Add database."""
+    body = {
+        "id": database_id,
+        "number_workers": 4,
+    }
+    url = f"{BACKEND_URL}/database"
+    return post(url, json=body)
+
+
+def remove_database(database_id: str):
+    """Remove database."""
+    body = {"id": database_id}
+    url = f"{BACKEND_URL}/database"
+    return delete(url, json=body)
+
+
+def start_workload():
+    """Start workload execution."""
+    body = {"workload_name": "fake_workload", "frequency": 10000}
+    url = f"{BACKEND_URL}/workload"
+    return post(url, json=body)
+
+
+def stop_workload():
+    """Stop workload execution."""
+    url = f"{BACKEND_URL}/workload"
+    return delete(url)
+
+
+def start_workers():
+    """Start worker pool."""
+    url = f"{BACKEND_URL}/worker"
+    return post(url)
+
+
+def stop_workers():
+    """Stop worker pool."""
+    url = f"{BACKEND_URL}/worker"
+    return delete(url)
 
 
 def format_results(results):
@@ -47,6 +95,12 @@ def print_output(results, number_clients):
             print(output)
 
 
+def print_user_results(results):
+    """Print wrk output directly to terminal."""
+    print_cyan("\nResults for user scenario wrk")
+    print_output(results, [1])
+
+
 def print_results(sequential_results, parallel_results, number_clients):
     """Print wrk output directly to terminal."""
     print_cyan("\nResults for sequential wrk")
@@ -66,7 +120,7 @@ def create_folder(name):
     return path
 
 
-def plot_theoretical_charts(data, path, endpoints, filename):
+def plot_charts(data, path, endpoints, filename, x_label):
     plot_bar_chart_for_endpoint(
         data,
         path,
@@ -74,6 +128,6 @@ def plot_theoretical_charts(data, path, endpoints, filename):
         f"bar_{filename}_throughput",
         "req/sec",
         endpoints,
-        "number of clients",
+        x_label,
     )
-    plot_hdr_histogram_for_endpoint(data, path, f"hdr_{filename}_throughput")
+    plot_hdr_histogram_for_endpoint(data, path, f"hdr_{filename}_throughput", x_label)
