@@ -54,6 +54,55 @@ def plot_bar_chart_for_endpoint(
     plt.close(fig)
 
 
+def plot_hdr_historgram_for_system_data(results, path, file_name, duration, label_type):
+    fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
+    plt.rcParams.update({"font.size": 22})
+    col_labels = [f"{s}sec" for s in range(duration)]
+    linestyles = {1: "-", 2: ":", 8: "-.", 16: "__", 10: "-."}
+    component_color = {
+        "back_end": "orange",
+        "generator": "blue",
+        "manager": "purple",
+    }
+    rows = []
+    row_labels = []
+    for number, data in results.items():
+        for component, results in data["CPU"].items():
+            row_labels.append(f"{component} & {number} {label_type} in %")
+            row = []
+            x_values = [i for i in range(duration)]
+            y_values = []
+            for value in results["usage"]:
+                y_values.append(value)
+                row.append(value)
+            rows.append(row)
+            plt.plot(
+                x_values,
+                y_values,
+                label=f"{component} & {number} {label_type}",
+                linestyle=linestyles[number],
+                linewidth=4.0,
+                color=component_color[component],
+            )
+    plt.legend()
+    plt.ylabel("CPU usage (%)")
+    plt.xlabel("time in sec")
+    plt.title("CPU usage of back-end components")
+    plt.grid()
+    plt.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=col_labels,
+        loc="bottom",
+        bbox=[0, -0.29, 1, 0.17],
+    )
+    plt.subplots_adjust(left=0.2, bottom=0.2)
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
+    plt.close(fig)
+
+
 def plot_hdr_histogram_for_endpoint(
     results, path, file_name, label_type, title_name=None
 ):

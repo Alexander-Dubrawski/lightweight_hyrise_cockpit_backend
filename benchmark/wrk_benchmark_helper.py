@@ -8,7 +8,11 @@ from requests import delete, post
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
-from .graph_plotter import plot_bar_chart_for_endpoint, plot_hdr_histogram_for_endpoint
+from .graph_plotter import (
+    plot_bar_chart_for_endpoint,
+    plot_hdr_histogram_for_endpoint,
+    plot_hdr_historgram_for_system_data,
+)
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 
@@ -131,3 +135,9 @@ def plot_charts(data, path, endpoints, filename, x_label):
         x_label,
     )
     plot_hdr_histogram_for_endpoint(data, path, f"hdr_{filename}_throughput", x_label)
+
+
+def plot_system_data(data, path, filename, duration):
+    plot_hdr_historgram_for_system_data(
+        data, path, f"system_{filename}_data", duration, "database object"
+    )

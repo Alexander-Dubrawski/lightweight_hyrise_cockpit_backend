@@ -4,12 +4,13 @@ from subprocess import check_output
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
-from .system_benchmark import format_data, monitor_system
+from .system_benchmark import format_data, fromat_avg_data, monitor_system
 from .wrk_benchmark_helper import (
     add_database,
     create_folder,
     format_results,
     plot_charts,
+    plot_system_data,
     print_results,
     print_user_results,
     remove_database,
@@ -95,7 +96,7 @@ def execute_in_user_context(number_database):
     processes = create_wrk_processes(shard_dict, 1, ["manager_metric", "flask_metric"])
     for process in processes:
         process.start()
-    monitor_system_data = monitor_system(DURATION_IN_SECOUNDS)
+    monitor_system_data = monitor_system(DURATION_IN_SECOUNDS_PARALLEL)
     for process in processes:
         process.join()
         process.terminate()
@@ -125,18 +126,16 @@ def run_benchmark():
         ["manager_time_intense_metric", "manager_metric"]
     )
     user_results, system_data = run_user_benchmark(NUMBER_DATABASES)
-
     print_results(sequential_results, parallel_results, NUMBER_CLIENTS)
     print_user_results(user_results)
 
     formatted_user_results = format_results(user_results)
     formatted_sequential_results = format_results(sequential_results)
     formatted_parallel_results = format_results(parallel_results)
-    formatted_system_data = format_data(system_data)
-
-    _ = formatted_system_data
-
+    formatted_system_data = format_data(system_data, NUMBER_DATABASES)
+    measurements = fromat_avg_data(NUMBER_DATABASES, formatted_system_data)
     path = create_folder("wrk_benchmark")
+    plot_system_data(measurements, path, "cpu", DURATION_IN_SECOUNDS_PARALLEL)
 
     plot_charts(
         formatted_sequential_results,

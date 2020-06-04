@@ -8,6 +8,36 @@ from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
 SLEEP_DURATION = 1
 
 
+def fromat_avg_data(number_databases, formatted_system_data):
+    measurements = {}
+    for number_database in number_databases:
+        measurements[number_database] = {
+            "CPU": {
+                "back_end": avg_usage(
+                    formatted_system_data[number_database]["back_end"], 2
+                ),
+                "generator": avg_usage(
+                    formatted_system_data[number_database]["generator"], 2
+                ),
+                "manager": avg_usage(
+                    formatted_system_data[number_database]["manager"], 2
+                ),
+            },
+            "MEMORY": {
+                "back_end": avg_usage(
+                    formatted_system_data[number_database]["back_end"], 3
+                ),
+                "generator": avg_usage(
+                    formatted_system_data[number_database]["generator"], 3
+                ),
+                "manager": avg_usage(
+                    formatted_system_data[number_database]["manager"], 3
+                ),
+            },
+        }
+    return measurements
+
+
 def avg_usage(data_set, index):
     measurements = {
         "usage": [],
@@ -27,17 +57,19 @@ def avg_usage(data_set, index):
     return measurements
 
 
-def format_data(row_data):
+def format_data(row_data, number_databases):
     formatted_data = {}
-    for component, results in row_data.items():
-        formatted_lines = []
-        for line in results:
-            formatted_line = line
-            formatted_line[0] = datetime.strptime(
-                formatted_line[0], "%Y-%m-%d_%H:%M:%S"
-            )
-            formatted_lines.append(formatted_line)
-        formatted_data[component] = formatted_lines
+    for number_database in number_databases:
+        formatted_data[number_database] = {}
+        for component, results in row_data[number_database].items():
+            formatted_lines = []
+            for line in results:
+                formatted_line = line
+                formatted_line[0] = datetime.strptime(
+                    formatted_line[0], "%Y-%m-%d_%H:%M:%S"
+                )
+                formatted_lines.append(formatted_line)
+            formatted_data[number_database][component] = formatted_lines
     return formatted_data
 
 
