@@ -54,7 +54,7 @@ def plot_bar_chart_for_endpoint(
     plt.close(fig)
 
 
-def plot_hdr_historgram_for_system_data(results, path, file_name, duration, label_type):
+def plot_hdr_historgram_for_system_data(results, path, duration, label_type, metric):
     fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [f"{s}sec" for s in range(duration)]
@@ -67,7 +67,7 @@ def plot_hdr_historgram_for_system_data(results, path, file_name, duration, labe
     rows = []
     row_labels = []
     for number, data in results.items():
-        for component, results in data["CPU"].items():
+        for component, results in data[metric].items():
             row_labels.append(f"{component} & {number} {label_type} in %")
             row = []
             x_values = [i for i in range(duration)]
@@ -85,9 +85,9 @@ def plot_hdr_historgram_for_system_data(results, path, file_name, duration, labe
                 color=component_color[component],
             )
     plt.legend()
-    plt.ylabel("CPU usage (%)")
+    plt.ylabel(f"{metric} usage (%)")
     plt.xlabel("time in sec")
-    plt.title("CPU usage of back-end components")
+    plt.title(f"{metric} usage of back-end components")
     plt.grid()
     plt.table(
         cellText=rows,
@@ -99,7 +99,7 @@ def plot_hdr_historgram_for_system_data(results, path, file_name, duration, labe
     )
     plt.subplots_adjust(left=0.2, bottom=0.2)
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
+    plt.savefig(f"{path}/{metric}_{ts}.pdf")
     plt.close(fig)
 
 

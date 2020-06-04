@@ -1,4 +1,5 @@
 from concurrent import futures
+from csv import writer
 from datetime import datetime
 from subprocess import CalledProcessError, check_output
 from time import sleep
@@ -6,6 +7,21 @@ from time import sleep
 from backend.settings import BACKEND_PORT, DB_MANAGER_PORT, GENERATOR_PORT
 
 SLEEP_DURATION = 1
+
+
+def write_to_csv(data, path, number_databases):
+    """Write benchmark results to CSV file."""
+    filednames = ["time_stamp", "pid", "%cpu", "%mem"]
+    for number_database in number_databases:
+        for component, measurements in data[number_database].items():
+            with open(
+                f"{path}/system_data_db{number_database}_{component}.csv",
+                "w",
+                newline="",
+            ) as f:
+                csv_writer = writer(f, delimiter="|")
+                csv_writer.writerow(filednames)
+                csv_writer.writerows(measurements)
 
 
 def fromat_avg_data(number_databases, formatted_system_data):

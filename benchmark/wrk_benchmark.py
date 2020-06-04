@@ -5,6 +5,7 @@ from subprocess import check_output
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
 from .system_benchmark import format_data, fromat_avg_data, monitor_system
+from .system_benchmark import write_to_csv as system_write_to_csv
 from .wrk_benchmark_helper import (
     add_database,
     create_folder,
@@ -135,7 +136,8 @@ def run_benchmark():
     formatted_system_data = format_data(system_data, NUMBER_DATABASES)
     measurements = fromat_avg_data(NUMBER_DATABASES, formatted_system_data)
     path = create_folder("wrk_benchmark")
-    plot_system_data(measurements, path, "cpu", DURATION_IN_SECOUNDS_PARALLEL)
+    plot_system_data(measurements, path, DURATION_IN_SECOUNDS_PARALLEL, "CPU")
+    plot_system_data(measurements, path, DURATION_IN_SECOUNDS_PARALLEL, "MEMORY")
 
     plot_charts(
         formatted_sequential_results,
@@ -158,6 +160,7 @@ def run_benchmark():
         "user",
         "database objects",
     )
+    system_write_to_csv(formatted_system_data)
 
 
 if __name__ == "__main__":
