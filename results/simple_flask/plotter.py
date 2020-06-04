@@ -10,8 +10,8 @@ colors = {
     "running for 4m": "purple",
     "running for 8m": "aqua",
     "running for 16m": "magenta",
-    "mac running for 16m": "blue",
-    "vm running for 16m": "orange",
+    "wrk running on vm for 4m": "blue",
+    "wrk running on mac for 4m": "orange",
 }
 
 
@@ -269,43 +269,74 @@ data_number_request_per_sec_parallel = {
     "running for 16m": 477.99,
 }
 
-
+data_mac = {
+    "1%": 0.467,
+    "25%": 0.515,
+    "50%": 0.539,
+    "75%": 0.580,
+    "90%": 0.759,
+    "99%": 3536.754,
+    "99.9%": 5769.656,
+    "99.99%": 5991.969,
+    "99.999%": 6013.956,
+    "100%": 6016.399,
+}
+data_momentum = {
+    "1%": 0.513,
+    "25%": 0.532,
+    "50%": 0.550,
+    "75%": 0.571,
+    "90%": 0.609,
+    "99%": 0.813,
+    "99.9%": 1.363,
+    "99.99%": 5.680,
+    "99.999%": 9.526,
+    "100%": 10.208,
+}
 if __name__ == "__main__":
-    plot_hdr_histogram(sequential_data, "sequential_wrk")  # type: ignore
-    plot_hdr_histogram(parallel_data, "parallel_wrk")  # type: ignore
-    plot_hdr_histogram(data_mac_system_noise, "mac_sequential_wrk")  # type: ignore
+    # plot_hdr_histogram(sequential_data, "sequential_wrk")  # type: ignore
+    # plot_hdr_histogram(parallel_data, "parallel_wrk")  # type: ignore
+    # plot_hdr_histogram(data_mac_system_noise, "mac_sequential_wrk")  # type: ignore
+    # plot_hdr_histogram(
+    #     {
+    #         "mac running for 16m": data_mac_system_noise["running for 16m"],
+    #         "vm running for 16m": sequential_data["running for 16m"],
+    #     },
+    #     "mac_vs_vm_wrk",
+    # )  # type: ignore
+    # plot_bar_chart(
+    #     data_number_request_sequenzial,
+    #     "number_request_sequenzial",
+    #     "Number of total Requests",
+    #     "Total number requests",
+    #     "Total number of request from benchmark",
+    # )  # type: ignore
+    # plot_bar_chart(
+    #     data_number_request_parallel,
+    #     "number_request_parallel",
+    #     "Number of total Requests",
+    #     "Total number requests",
+    #     "Total number of request from benchmark",
+    # )  # type: ignore
+    # plot_bar_chart(
+    #     data_number_request_per_sec_sequenzial,
+    #     "number_request_per_sec_sequenzial",
+    #     "Number of req/sec",
+    #     "req/sec",
+    #     "Req/sec of thread running time",
+    # )  # type: ignore
+    # plot_bar_chart(
+    #     data_number_request_per_sec_parallel,
+    #     "number_request_per_sec_parallel",
+    #     "Number of req/sec",
+    #     "req/sec",
+    #     "Req/sec of thread running time",
+    # )  # type: ignore
+
     plot_hdr_histogram(
         {
-            "mac running for 16m": data_mac_system_noise["running for 16m"],
-            "vm running for 16m": sequential_data["running for 16m"],
+            "wrk running on mac for 4m": data_mac,
+            "wrk running on vm for 4m": data_momentum,
         },
         "mac_vs_vm_wrk",
-    )  # type: ignore
-    plot_bar_chart(
-        data_number_request_sequenzial,
-        "number_request_sequenzial",
-        "Number of total Requests",
-        "Total number requests",
-        "Total number of request from benchmark",
-    )  # type: ignore
-    plot_bar_chart(
-        data_number_request_parallel,
-        "number_request_parallel",
-        "Number of total Requests",
-        "Total number requests",
-        "Total number of request from benchmark",
-    )  # type: ignore
-    plot_bar_chart(
-        data_number_request_per_sec_sequenzial,
-        "number_request_per_sec_sequenzial",
-        "Number of req/sec",
-        "req/sec",
-        "Req/sec of thread running time",
-    )  # type: ignore
-    plot_bar_chart(
-        data_number_request_per_sec_parallel,
-        "number_request_per_sec_parallel",
-        "Number of req/sec",
-        "req/sec",
-        "Req/sec of thread running time",
     )  # type: ignore
