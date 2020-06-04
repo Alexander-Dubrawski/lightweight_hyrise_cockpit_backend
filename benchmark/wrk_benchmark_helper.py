@@ -137,7 +137,5 @@ def plot_charts(data, path, endpoints, filename, x_label):
     plot_hdr_histogram_for_endpoint(data, path, f"hdr_{filename}_throughput", x_label)
 
 
-def plot_system_data(data, path, filename, duration):
-    plot_hdr_historgram_for_system_data(
-        data, path, f"system_{filename}_data", duration, "database object"
-    )
+def plot_system_data(data, path, duration, metric):
+    plot_hdr_historgram_for_system_data(data, path, duration, metric)

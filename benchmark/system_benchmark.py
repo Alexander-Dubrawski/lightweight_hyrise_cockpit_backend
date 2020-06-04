@@ -69,7 +69,9 @@ def avg_usage(data_set, index):
             last_ts = current_ts
             currend_secound += 1
         else:
-            measurements["usage"][-1] = measurements["usage"][-1] + float(data[index])
+            measurements["usage"][-1] = round(
+                measurements["usage"][-1] + float(data[index]), 3
+            )
     return measurements
 
 
