@@ -109,8 +109,9 @@ def print_results(sequential_results, parallel_results, number_clients):
     """Print wrk output directly to terminal."""
     print_cyan("\nResults for sequential wrk")
     print_output(sequential_results, number_clients)
-    print_cyan("\nResults for parallel wrk")
-    print_output(parallel_results, number_clients)
+    if parallel_results:
+        print_cyan("\nResults for parallel wrk")
+        print_output(parallel_results, number_clients)
 
 
 def create_folder(name):

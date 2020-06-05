@@ -21,11 +21,11 @@ from .wrk_benchmark_helper import (
     stop_workload,
 )
 
-NUMBER_CLIENTS = [1, 2, 8]
+NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 80]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 DURATION_IN_SECOUNDS = 10
 DURATION_IN_SECOUNDS_PARALLEL = 10
-NUMBER_DATABASES = [1, 2, 10]
+NUMBER_DATABASES = [8, 80]
 ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
 
 
@@ -123,16 +123,16 @@ def run_user_benchmark(number_databases):
 def run_benchmark():
     """Run sequential and parallel wrk benchmark on endpoints."""
     sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"])
-    parallel_results = run_wrk_parallel(
-        ["manager_time_intense_metric", "manager_metric"]
-    )
+    # parallel_results = run_wrk_parallel(
+    #     ["manager_time_intense_metric", "manager_metric"]
+    # )
     user_results, system_data = run_user_benchmark(NUMBER_DATABASES)
-    print_results(sequential_results, parallel_results, NUMBER_CLIENTS)
+    print_results(sequential_results, None, NUMBER_CLIENTS)
     print_user_results(user_results)
 
     formatted_user_results = format_results(user_results)
     formatted_sequential_results = format_results(sequential_results)
-    formatted_parallel_results = format_results(parallel_results)
+    # formatted_parallel_results = format_results(parallel_results)
     formatted_system_data = format_data(system_data, NUMBER_DATABASES)
     measurements = fromat_avg_data(NUMBER_DATABASES, formatted_system_data)
     path = create_folder("wrk_benchmark")
@@ -146,13 +146,13 @@ def run_benchmark():
         "theoretical_sequential",
         "clients",
     )
-    plot_charts(
-        formatted_parallel_results,
-        path,
-        ("manager_metric", "manager_time_intense_metric"),
-        "theoretical_parallel",
-        "clients",
-    )
+    # plot_charts(
+    #     formatted_parallel_results,
+    #     path,
+    #     ("manager_metric", "manager_time_intense_metric"),
+    #     "theoretical_parallel",
+    #     "clients",
+    # )
     plot_charts(
         formatted_user_results,
         path,

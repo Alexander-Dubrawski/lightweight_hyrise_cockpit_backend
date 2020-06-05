@@ -58,7 +58,7 @@ def plot_hdr_historgram_for_system_data(results, path, duration, label_type, met
     fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [f"{s}sec" for s in range(duration)]
-    linestyles = {1: "-", 2: ":", 8: "-.", 16: "__", 10: "-."}
+    linestyles = {1: ":", 2: "-", 8: "-.", 16: "__", 80: "-."}
     component_color = {
         "back_end": "orange",
         "generator": "blue",
@@ -112,12 +112,12 @@ def plot_hdr_histogram_for_endpoint(
         f"{percentile}th"
         for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
     ]
-    linestyles = {1: "-", 2: ":", 8: "-.", 16: "__", 10: "-."}
-    component_color = {
-        "manager_metric": "orange",
-        "flask_metric": "blue",
-        "manager_time_intense_metric": "purple",
-    }
+    # linestyles = {1: "-", 2: ":", 8: "-.", 16: "__", 10: "-."}
+    # component_color = {
+    #     "manager_metric": "orange",
+    #     "flask_metric": "blue",
+    #     "manager_time_intense_metric": "purple",
+    # }
     rows = []
     row_labels = []
     for number, data in results.items():
@@ -135,9 +135,7 @@ def plot_hdr_histogram_for_endpoint(
                 x_values,
                 y_values,
                 label=f"{component} & {number} {label_type}",
-                linestyle=linestyles[number],
                 linewidth=4.0,
-                color=component_color[component],
             )
     plt.legend()
     plt.ylabel("Latency (milliseconds)")
