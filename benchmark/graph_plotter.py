@@ -115,7 +115,7 @@ def plot_hdr_histogram_for_single_endpoint(
     rows = []
     row_labels = []
     for number, data in results.items():
-        row_labels.append(f"{data[component]} & {number} {label_type}")
+        row_labels.append(f"{component} & {number} {label_type}")
         row = []
         x_values = []
         y_values = []
