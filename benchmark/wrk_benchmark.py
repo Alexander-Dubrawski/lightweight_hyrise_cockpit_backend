@@ -25,7 +25,7 @@ NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 80]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 DURATION_IN_SECOUNDS = 10
 DURATION_IN_SECOUNDS_PARALLEL = 10
-NUMBER_DATABASES = [8, 80]
+NUMBER_DATABASES = [1, 8, 80]
 ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
 
 
@@ -144,15 +144,17 @@ def run_benchmark():
         path,
         ("manager_metric", "flask_metric"),
         "theoretical_sequential",
-        "clients",
+        "client",
     )
+
     # plot_charts(
     #     formatted_parallel_results,
     #     path,
     #     ("manager_metric", "manager_time_intense_metric"),
     #     "theoretical_parallel",
-    #     "clients",
+    #     "client",
     # )
+
     plot_charts(
         formatted_user_results,
         path,
@@ -160,7 +162,7 @@ def run_benchmark():
         "user",
         "database objects",
     )
-    system_write_to_csv(formatted_system_data)
+    system_write_to_csv(formatted_system_data, path, NUMBER_DATABASES)
 
 
 if __name__ == "__main__":

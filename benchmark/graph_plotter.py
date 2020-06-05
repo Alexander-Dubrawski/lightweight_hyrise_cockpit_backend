@@ -54,11 +54,11 @@ def plot_bar_chart_for_endpoint(
     plt.close(fig)
 
 
-def plot_hdr_historgram_for_system_data(results, path, duration, label_type, metric):
-    fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
+def plot_hdr_historgram_for_system_data(results, path, duration, metric):
+    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [f"{s}sec" for s in range(duration)]
-    linestyles = {1: ":", 2: "-", 8: "-.", 16: "__", 80: "-."}
+    linestyles = {1: "_", 2: ":", 8: "-.", 16: "__", 80: "-."}
     component_color = {
         "back_end": "orange",
         "generator": "blue",
@@ -68,7 +68,7 @@ def plot_hdr_historgram_for_system_data(results, path, duration, label_type, met
     row_labels = []
     for number, data in results.items():
         for component, results in data[metric].items():
-            row_labels.append(f"{component} & {number} {label_type} in %")
+            row_labels.append(f"{component} & {number} database object")
             row = []
             x_values = [i for i in range(duration)]
             y_values = []
@@ -79,7 +79,7 @@ def plot_hdr_historgram_for_system_data(results, path, duration, label_type, met
             plt.plot(
                 x_values,
                 y_values,
-                label=f"{component} & {number} {label_type}",
+                label=f"{component} & {number} database object",
                 linestyle=linestyles[number],
                 linewidth=4.0,
                 color=component_color[component],
@@ -99,14 +99,14 @@ def plot_hdr_historgram_for_system_data(results, path, duration, label_type, met
     )
     plt.subplots_adjust(left=0.2, bottom=0.2)
     ts = timegm(gmtime())
-    plt.savefig(f"{path}/{metric}_{ts}.pdf")
+    plt.savefig(f"{path}/system_{metric}_{ts}.pdf")
     plt.close(fig)
 
 
 def plot_hdr_histogram_for_endpoint(
     results, path, file_name, label_type, title_name=None
 ):
-    fig = figure(num=None, figsize=(40, 20), dpi=300, facecolor="w", edgecolor="k")
+    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
         f"{percentile}th"
