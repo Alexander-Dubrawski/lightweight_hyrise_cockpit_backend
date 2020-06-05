@@ -103,10 +103,59 @@ def plot_hdr_historgram_for_system_data(results, path, duration, metric):
     plt.close(fig)
 
 
+def plot_hdr_histogram_for_single_endpoint(
+    results, path, file_name, label_type, component, title_name=None
+):
+    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
+    plt.rcParams.update({"font.size": 22})
+    col_labels = [
+        f"{percentile}th"
+        for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
+    ]
+    rows = []
+    row_labels = []
+    for number, data in results.items():
+        row_labels.append(f"{data[component]} & {number} {label_type}")
+        row = []
+        x_values = []
+        y_values = []
+        for percentile, value in data[component]["latency_distribution"].items():
+            x_values.append(percentile)
+            y_values.append(value)
+            row.append(value)
+        rows.append(row)
+        plt.plot(
+            x_values,
+            y_values,
+            label=f"{component} & {number} {label_type}",
+            linewidth=4.0,
+        )
+    plt.legend()
+    plt.ylabel("Latency (milliseconds)")
+    plt.xlabel("Percentile")
+    if title_name:
+        plt.title(title_name)
+    else:
+        plt.title("Latency by Percentile Distribution")
+    plt.grid()
+    plt.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=col_labels,
+        loc="bottom",
+        bbox=[0, -0.29, 1, 0.17],
+    )
+    plt.subplots_adjust(left=0.2, bottom=0.2)
+    ts = timegm(gmtime())
+    plt.savefig(f"{path}/{file_name}_{ts}.pdf")
+    plt.close(fig)
+
+
 def plot_hdr_histogram_for_endpoint(
     results, path, file_name, label_type, title_name=None
 ):
-    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
+    fig = figure(num=None, figsize=(40, 40), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
         f"{percentile}th"

@@ -11,6 +11,7 @@ from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 from .graph_plotter import (
     plot_bar_chart_for_endpoint,
     plot_hdr_histogram_for_endpoint,
+    plot_hdr_histogram_for_single_endpoint,
     plot_hdr_historgram_for_system_data,
 )
 
@@ -136,6 +137,13 @@ def plot_charts(data, path, endpoints, filename, x_label):
         x_label,
     )
     plot_hdr_histogram_for_endpoint(data, path, f"hdr_{filename}_throughput", x_label)
+    endpoint_one, endpoint_two = endpoints
+    plot_hdr_histogram_for_single_endpoint(
+        data, path, f"hdr_{endpoint_one}_{filename}_throughput", x_label, endpoint_one
+    )
+    plot_hdr_histogram_for_single_endpoint(
+        data, path, f"hdr_{endpoint_two}_{filename}_throughput", x_label, endpoint_two
+    )
 
 
 def plot_system_data(data, path, duration, metric):
