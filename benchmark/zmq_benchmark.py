@@ -12,8 +12,8 @@ from zmq import REQ, Context
 from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
-CLIENTS = [2, 4, 8, 16, 32, 40]
-RUNS = 100_000
+CLIENTS = [1, 2, 4, 8, 16, 32, 40, 80]
+RUNS = 10_000
 PERCENTILES = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
 
 
@@ -109,9 +109,10 @@ def run_calculations(data):
 def run_benchmark():
     results = {}
     for n_client in CLIENTS:
+        print(f"running benchmark with {n_client} clients")
         results[n_client] = {}
         worker = n_client
-        arguments = [RUNS for _ in range(n_client)]
+        arguments = [int(RUNS / n_client) for _ in range(n_client)]
         with futures.ProcessPoolExecutor(worker) as executor:
             res = executor.map(run_clinet, arguments)
         results[n_client] = list(res)
@@ -121,6 +122,7 @@ def run_benchmark():
 def main():
     row_results = run_benchmark()
     formatted_results = run_calculations(row_results)
+    print(formatted_results)
     plot_hdr_histogram(formatted_results, "zmq_hdr")
 
 
