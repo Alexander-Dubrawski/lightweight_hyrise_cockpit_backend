@@ -19,6 +19,7 @@ struct client_struct {
    double max_latency;
    double avg_latency;
    double std_latency;
+   double req_sec;
 }; 
 
 double calculateSD(double mean, double data[]) {
@@ -73,8 +74,6 @@ void* zmq_runner(void* arg)
             arg_struct->latency[i] = (requestEnd.tv_nsec - requestStart.tv_nsec);
         }
     }
-    zmq_close (requester);
-    zmq_ctx_destroy (context);
     clock_gettime(CLOCK_REALTIME, &benchmark_End);
     if ((benchmark_End.tv_nsec-benchmark_Start.tv_nsec)<0) {
         arg_struct->runtime = 1000000000 + benchmark_End.tv_nsec - benchmark_Start.tv_nsec;
@@ -82,10 +81,13 @@ void* zmq_runner(void* arg)
     else {
         arg_struct->runtime = (benchmark_End.tv_nsec - benchmark_Start.tv_nsec);
     }
+    zmq_close (requester);
+    zmq_ctx_destroy (context);
     arg_struct->max_latency = get_max(arg_struct->latency);
     arg_struct->avg_latency = get_mean(arg_struct->latency);
     arg_struct->std_latency = calculateSD(arg_struct->avg_latency, arg_struct->latency);
     arg_struct->throughput = arg_struct->runtime / RUNS;
+    arg_struct->req_sec = 1.0 / (arg_struct->throughput / 1000000000);
     pthread_exit(0); 
 }
 
@@ -104,6 +106,7 @@ int main(void){
     double max_latency = 0.0;
     double avg_latency = 0.0;
     double std_latency = 0.0;
+    double req_sec = 0.0;
     FILE *fptr;
     fptr = fopen("output.txt","w");
     fprintf(fptr,"[");
@@ -114,10 +117,12 @@ int main(void){
         printf("max_latency for thread %d is %lf\n",i, args[i].max_latency);
         printf("avg_latency for thread %d is %lf\n",i, args[i].avg_latency);
         printf("std_latency for thread %d is %lf\n",i, args[i].std_latency);
+        printf("req_sec for thread %d is %lf\n",i, args[i].req_sec);
         throughput += args[i].throughput;
         max_latency += args[i].max_latency;
         avg_latency += args[i].avg_latency;
         std_latency += args[i].std_latency;
+        req_sec += args[i].req_sec;
         if (i == clients - 1){
             for (int z = 0; z < RUNS - 1; z++){
                 fprintf(fptr,"%lf ,",args[i].latency[z]);
@@ -136,4 +141,5 @@ int main(void){
     printf("max_latency is %lf\n", (max_latency / CLIENTS));
     printf("avg_latency is %lf\n", (avg_latency / CLIENTS));
     printf("std_latency is %lf\n", (std_latency / CLIENTS));
+    printf("req_sec is %lf\n", (req_sec / CLIENTS));
 }
