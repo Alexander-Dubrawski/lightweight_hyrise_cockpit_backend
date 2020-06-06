@@ -9,12 +9,11 @@ from zmq import REQ, Context
 from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
-CLIENTS = 2
-RUNS = 1000
+CLIENTS = [2, 4]
+RUNS = 10
 
 
-def run_clinet(args):
-    runs, ipc_message = args
+def run_clinet(runs):
     context = Context()
     socket = context.socket(REQ)
     socket.connect(f"tcp://{DB_MANAGER_HOST}:{DB_MANAGER_PORT}")
@@ -30,31 +29,57 @@ def run_clinet(args):
     return {"latency": latency, "run_time": (end_benchmark - start_benchmark)}
 
 
-def main():
-    worker = CLIENTS
-    arguments = [(RUNS, b"Hello") for _ in range(CLIENTS)]
-    with futures.ProcessPoolExecutor(worker) as executor:
-        res = executor.map(run_clinet, arguments)
-    results = list(res)
+def claculate_values(args):
+    number_clinets, data = args
     complete_latency = []
     complete_runtime = 0
-    for element in results:
+    for element in data:
         complete_latency += element["latency"]
         complete_runtime += element["run_time"] / RUNS
-    complete_runtime = complete_runtime / CLIENTS
     avg_latency = mean(complete_latency)
     median_latency = median(complete_latency)
     stdev_latency = pstdev(complete_latency)
     num = np.array(complete_latency)
     percentiles = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990]
     percentiles_values = [np.percentile(num, percentile) for percentile in percentiles]
+    return {
+        number_clinets: {
+            "Avg": round(avg_latency / 1_000_000, 3),
+            "Median": round(median_latency / 1_000_000, 3),
+            "Stdev": round(stdev_latency / 1_000_000, 3),
+            "latency distribution": percentiles_values,
+        }
+    }
 
-    print(f"Latency Avg {round(avg_latency / 1_000_000, 3)}ms")
-    print(f"Latency Med {round(median_latency / 1_000_000, 3)}ms")
-    print(f"Latency Med {round(stdev_latency / 1_000_000, 3)}ms")
-    print("\nLatency distribution:")
-    for percentile, value in zip(percentiles, percentiles_values):
-        print(f"{percentile}th:  {round(value / 1_000_000, 3)}ms")
+
+def run_calculations(data):
+    arguments = [(key, value) for key, value in data.items()]
+    worker = len(arguments)
+    with futures.ProcessPoolExecutor(worker) as executor:
+        res = executor.map(claculate_values, arguments)
+    results = list(res)
+    combined_res = {}
+    for result in results:
+        combined_res.update(result)
+    return combined_res
+
+
+def run_benchmark():
+    results = {}
+    for n_client in CLIENTS:
+        results[n_client] = {}
+        worker = n_client
+        arguments = [RUNS for _ in range(n_client)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[n_client] = list(res)
+    return results
+
+
+def main():
+    row_results = run_benchmark()
+    formatted_results = run_calculations(row_results)
+    print(formatted_results)
 
 
 if __name__ == "__main__":
