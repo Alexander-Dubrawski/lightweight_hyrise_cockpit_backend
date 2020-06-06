@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.pyplot import figure
 
 from .results_worker_thread_flask import (
+    combination_system_usage,
     latency_thread_no_i_o,
     latency_thread_with_i_o,
     latency_worker_no_i_o,
@@ -15,6 +16,45 @@ from .results_worker_thread_flask import (
     throughput_worker_thread_compination,
     throughput_worker_with_i_o,
 )
+
+
+def plot_hdr_historgram_for_system_data(data, duration, metric):
+    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
+    plt.rcParams.update({"font.size": 22})
+    col_labels = [f"{s}sec" for s in range(duration)]
+    rows = []
+    row_labels = []
+    for component, results in data.items():
+        row_labels.append(f"{component[0]}p & {component[1]}t")
+        row = []
+        x_values = [i for i in range(duration)]
+        y_values = []
+        for value in results[metric]["usage"]:
+            y_values.append(value)
+            row.append(value)
+        rows.append(row)
+        plt.plot(
+            x_values,
+            y_values,
+            label=f"{component[0]}p & {component[1]}t",
+            linewidth=4.0,
+        )
+    plt.legend()
+    plt.ylabel(f"{metric} usage (%)")
+    plt.xlabel("time in sec")
+    plt.title(f"{metric} usage of back-end components")
+    plt.grid()
+    plt.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=col_labels,
+        loc="bottom",
+        bbox=[0, -0.29, 1, 0.17],
+    )
+    plt.subplots_adjust(left=0.2, bottom=0.2)
+    plt.savefig(f"measurements/system_{metric}.pdf")
+    plt.close(fig)
 
 
 def plot_line_hdr_histogramm(data, metric):
@@ -192,3 +232,4 @@ if __name__ == "__main__":
     plot_hdr_histogram(latency_worker_no_i_o, latency_thread_no_i_o, "hdr_no_io")
     plot_bar_chart_combination(throughput_worker_thread_compination, "bar_combination")
     plot_hdr_histogram_combination(latency_worker_thread_compination, "hdr_combination")
+    plot_hdr_historgram_for_system_data(combination_system_usage, 10, "CPU")
