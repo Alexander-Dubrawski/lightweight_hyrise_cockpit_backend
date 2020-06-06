@@ -7,20 +7,25 @@ from time import sleep
 
 from backend.settings import BACKEND_PORT
 
+NUMBER_PROCESSES = 80
+NUMBER_TREADS = 1
 SLEEP_DURATION = 1
 
 
-def write_to_csv(data, path):
+def write_to_csv(data):
     """Write benchmark results to CSV file."""
     filednames = ["time_stamp", "pid", "%cpu", "%mem"]
-    with open("measurements/system_backend.csv", "w", newline="",) as f:
+    with open(
+        f"measurements/system_backend_{NUMBER_PROCESSES}p_{NUMBER_TREADS}t.csv",
+        "w",
+        newline="",
+    ) as f:
         csv_writer = writer(f, delimiter="|")
         csv_writer.writerow(filednames)
         csv_writer.writerows(data)
 
 
-def fromat_avg_data(number_databases, formatted_system_data):
-    measurements = {}
+def fromat_avg_data(formatted_system_data):
     measurements = {
         "CPU": avg_usage(formatted_system_data, 2),
         "MEMORY": avg_usage(formatted_system_data, 3),
@@ -97,7 +102,7 @@ def get_pids():
 
 def run_wrk():
     out_put = check_output(
-        "wrk -t80 -c80 -s ./benchmark_tools/report.lua -d10s http://127.0.0.1:8000/flask_metric",
+        "wrk -t80 -c80 -s ./benchmark_tools/report.lua -d11s http://127.0.0.1:8000/flask_metric",
         shell=True,
     ).decode("utf-8")
     print(out_put)
@@ -117,7 +122,8 @@ def monitor_system():
     results = run_ps()
     write_to_csv(results)
     formatted_data = format_data(results)
-    print(formatted_data)
+    formatted_avg = fromat_avg_data(formatted_data)
+    print(formatted_avg)
     # plot_graph(formatted_data, path)
 
 
