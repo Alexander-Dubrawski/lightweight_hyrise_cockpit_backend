@@ -2,6 +2,7 @@
 from backend.settings import (
     DB_MANAGER_LISTENING,
     DB_MANAGER_PORT,
+    WORKER_PORT,
     WORKLOAD_PUBSUB_PORT,
     WORKLOAD_SUB_HOST,
 )
@@ -17,6 +18,7 @@ def main() -> None:
             DB_MANAGER_PORT,
             WORKLOAD_SUB_HOST,
             WORKLOAD_PUBSUB_PORT,
+            WORKER_PORT,
         ) as database_manager:
             print(
                 f"Database manager running on port {DB_MANAGER_PORT} (Press CTRL+C to quit)"

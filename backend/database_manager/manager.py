@@ -20,6 +20,7 @@ class DatabaseManager(object):
         db_manager_port: str,
         workload_sub_host: str,
         workload_pubsub_port: str,
+        worker_port: str,
     ) -> None:
         """Initialize a DatabaseManager."""
         self._workload_sub_host = workload_sub_host
@@ -28,7 +29,9 @@ class DatabaseManager(object):
         server_calls: Dict[
             str, Tuple[Callable[[Body], Response], Optional[Dict]]
         ] = self._get_server_calls()
-        self._server = Server(db_manager_listening, db_manager_port, server_calls)
+        self._server = Server(
+            db_manager_listening, db_manager_port, server_calls, worker_port
+        )
 
     def __enter__(self) -> "DatabaseManager":
         """Return self for a context manager."""
@@ -53,8 +56,6 @@ class DatabaseManager(object):
             "get databases": self._call_get_databases,
             "get queue length": self._call_get_queue_length,
             "status": self._call_status,
-            "get time intense metric": self._call_time_intense_metric,
-            "get metric": self._call_metric,
         }
 
     def _call_add_database(self, body: Body) -> Response:
