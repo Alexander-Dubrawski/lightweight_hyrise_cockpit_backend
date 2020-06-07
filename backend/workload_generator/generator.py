@@ -7,11 +7,11 @@ from types import TracebackType
 from typing import Dict, Optional, Type
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from zmq import PUB, Context
 
+from backend.generator_server import Server
 from backend.request import Body
 from backend.response import Response, get_response
-from backend.server import Server
+from zmq import PUB, Context
 
 
 class WorkloadGenerator(object):
