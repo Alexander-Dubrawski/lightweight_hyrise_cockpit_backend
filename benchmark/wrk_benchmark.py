@@ -1,4 +1,5 @@
 """Tool for executing wrk benchmark."""
+from json import dumps
 from multiprocessing import Manager, Process
 from subprocess import check_output
 
@@ -21,11 +22,11 @@ from .wrk_benchmark_helper import (
     stop_workload,
 )
 
-NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 80]
+NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 60]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 DURATION_IN_SECOUNDS = 10
 DURATION_IN_SECOUNDS_PARALLEL = 10
-NUMBER_DATABASES = [1, 8, 80]
+NUMBER_DATABASES = [1, 2, 10, 40]
 ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
 
 
@@ -136,6 +137,14 @@ def run_benchmark():
     formatted_system_data = format_data(system_data, NUMBER_DATABASES)
     measurements = fromat_avg_data(NUMBER_DATABASES, formatted_system_data)
     path = create_folder("wrk_benchmark")
+
+    with open(f"{path}/formatted_sequential_results.txt", "+w") as file:
+        file.write(dumps(formatted_sequential_results))
+    with open(f"{path}/measurements_system.txt", "+w") as file:
+        file.write(dumps(measurements))
+    with open(f"{path}/formatted_user_results.txt", "+w") as file:
+        file.write(dumps(formatted_user_results))
+
     plot_system_data(measurements, path, DURATION_IN_SECOUNDS_PARALLEL, "CPU")
     plot_system_data(measurements, path, DURATION_IN_SECOUNDS_PARALLEL, "MEMORY")
 

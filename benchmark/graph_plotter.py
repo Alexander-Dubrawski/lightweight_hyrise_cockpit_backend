@@ -58,7 +58,7 @@ def plot_hdr_historgram_for_system_data(results, path, duration, metric):
     fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [f"{s}sec" for s in range(duration)]
-    linestyles = {1: "-", 2: ":", 8: (0, (1, 10)), 16: "--", 80: "-."}
+    linestyles = {1: "-", 2: ":", 10: (0, (1, 10)), 40: "--", 80: "-."}
     component_color = {
         "back_end": "orange",
         "generator": "blue",
@@ -168,7 +168,7 @@ def plot_hdr_histogram_for_endpoint(
         8: (0, (5, 5)),
         16: (0, (5, 10)),
         32: (0, (3, 1, 1, 1, 1, 1)),
-        80: (0, (3, 10, 1, 10, 1, 10)),
+        60: (0, (3, 10, 1, 10, 1, 10)),
     }
     component_color = {
         "manager_metric": "orange",
