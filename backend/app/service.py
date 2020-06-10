@@ -1,4 +1,5 @@
 """Service for back-end api."""
+from time import sleep
 from typing import Dict, List
 
 from backend.request import Header, Request
@@ -136,6 +137,7 @@ class DatabaseService:
 
     @classmethod
     def get_flask_metric(cls) -> Dict:
+        sleep(0.001)
         fake_metric_information = {
             "customer": {"size": 10000, "number_columns": 2},
             "supplier": {"size": 400, "number_columns": 1},
