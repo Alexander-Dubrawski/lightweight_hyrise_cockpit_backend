@@ -12,7 +12,7 @@ from backend.request import Body, Request
 from backend.response import Response, get_response
 from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller
 
-NUMBER_WORKER = 10
+NUMBER_WORKER = 16
 
 
 def _call_time_intense_metric(body: Body) -> Response:

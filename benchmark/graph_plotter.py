@@ -77,8 +77,8 @@ def plot_hdr_historgram_for_system_data(results, path, duration, metric):
                 row.append(value)
             rows.append(row)
             plt.plot(
-                x_values,
-                y_values,
+                np.array(x_values),
+                np.array(y_values),
                 label=f"{component} & {number} database object",
                 linestyle=linestyles[number],
                 linewidth=4.0,

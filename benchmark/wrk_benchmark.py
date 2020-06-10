@@ -122,10 +122,12 @@ def run_user_benchmark(number_databases):
 
 def run_benchmark():
     """Run sequential and parallel wrk benchmark on endpoints."""
+    print("Execute sequential")
     sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"])
     # parallel_results = run_wrk_parallel(
     #     ["manager_time_intense_metric", "manager_metric"]
     # )
+    print("Execute user")
     user_results, system_data = run_user_benchmark(NUMBER_DATABASES)
     print_results(sequential_results, None, NUMBER_CLIENTS)
     print_user_results(user_results)
