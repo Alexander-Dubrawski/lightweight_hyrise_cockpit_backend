@@ -8,16 +8,7 @@ import time
 
 import zmq
 
-# Prepare our context and sockets
-context = zmq.Context()
-frontend = context.socket(zmq.ROUTER)
-backend = context.socket(zmq.DEALER)
-frontend.bind("tcp://*:5555")
-backend.bind("tcp://*:5560")
-
-# Initialize poll set
-poller = zmq.Poller()
-poller.register(frontend, zmq.POLLIN)
+# Prepare our context and socket
 
 
 def worker_routine():
@@ -25,7 +16,7 @@ def worker_routine():
     context = zmq.Context()
     # Socket to talk to dispatcher
     socket = context.socket(zmq.REP)
-    socket.connect("tcp://localhost:5570")
+    socket.connect("inproc://workers")
 
     while True:
         _ = socket.recv_json()
@@ -37,9 +28,9 @@ def main():
     # Prepare our context and sockets
     context = zmq.Context()
     frontend = context.socket(zmq.ROUTER)
-    workers = context.socket(zmq.DEALER)
     frontend.bind("tcp://*:5556")
-    workers.bind("tcp://*:5570")
+    workers = context.socket(zmq.DEALER)
+    workers.bind("inproc://workers")
 
     # Initialize poll set
     poller = zmq.Poller()

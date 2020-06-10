@@ -12,8 +12,8 @@ from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 from zmq import REQ, Context
 
-CLIENTS = [2]
-RUNS = 100
+CLIENTS = [1]
+RUNS = 10
 PERCENTILES = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
 
 
