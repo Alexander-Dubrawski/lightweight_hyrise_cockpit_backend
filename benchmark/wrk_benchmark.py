@@ -95,7 +95,7 @@ def execute_in_user_context(number_database):
         add_database(str(i))
     start_workload()
     start_workers()
-    processes = create_wrk_processes(shard_dict, 1, ["manager_metric", "flask_metric"])
+    processes = create_wrk_processes(shard_dict, 8, ["manager_metric", "flask_metric"])
     for process in processes:
         process.start()
     monitor_system_data = monitor_system(DURATION_IN_SECOUNDS_PARALLEL)
