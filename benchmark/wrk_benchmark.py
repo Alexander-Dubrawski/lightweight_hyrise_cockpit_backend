@@ -22,11 +22,11 @@ from .wrk_benchmark_helper import (
     stop_workload,
 )
 
-NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 60]
+NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 64]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 DURATION_IN_SECOUNDS = 10
 DURATION_IN_SECOUNDS_PARALLEL = 10
-NUMBER_DATABASES = [1, 2, 10, 40]
+NUMBER_DATABASES = [1, 10, 20, 40]
 ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
 
 
