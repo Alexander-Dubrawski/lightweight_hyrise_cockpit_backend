@@ -1,7 +1,7 @@
 # type: ignore
 from csv import writer
 from datetime import datetime
-from multiprocessing import Process
+from json import dumps
 from subprocess import CalledProcessError, check_output
 from time import sleep
 
@@ -102,7 +102,7 @@ def get_pids():
 
 def run_wrk():
     out_put = check_output(
-        "wrk -t80 -c80 -s ./benchmark_tools/report.lua -d11s http://127.0.0.1:8000/flask_metric",
+        "wrk -t64 -c64 -s ./benchmark_tools/report.lua -d11s http://127.0.0.1:8000/flask_metric",
         shell=True,
     ).decode("utf-8")
     print(out_put)
@@ -110,10 +110,10 @@ def run_wrk():
 
 def run_ps():
     ppids = get_pids()
-    p = Process(target=run_wrk)
-    p.start()
-    results = monitor_component(ppids, 10)
-    p.join()
+    # p = Process(target=run_wrk)
+    # p.start()
+    results = monitor_component(ppids, 60)
+    # p.join()
     return results
 
 
@@ -124,6 +124,8 @@ def monitor_system():
     formatted_data = format_data(results)
     formatted_avg = fromat_avg_data(formatted_data)
     print(formatted_avg)
+    with open("flask_system_results.txt", "+w") as file:
+        file.write(dumps(formatted_avg))
     # plot_graph(formatted_data, path)
 
 
