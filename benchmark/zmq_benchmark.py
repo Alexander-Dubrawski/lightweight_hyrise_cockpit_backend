@@ -11,7 +11,7 @@ from matplotlib.pyplot import figure
 from zmq import REQ, Context
 
 from backend.request import Header, Request
-from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
+from backend.settings import BROKER_LISTENING, BROKER_PORT
 
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
 RUNS = 4096
@@ -58,7 +58,7 @@ def plot_hdr_histogram(results, file_name):
 def run_clinet(runs):
     context = Context()
     socket = context.socket(REQ)
-    socket.connect(f"tcp://{DB_MANAGER_HOST}:{DB_MANAGER_PORT}")
+    socket.connect(f"tcp://{BROKER_LISTENING}:{BROKER_PORT}")
     latency = []
     start_benchmark = time_ns()
     for _ in range(runs):
