@@ -4,14 +4,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from results_wsgi_server import (
+    io_0001_p_t_latency,
     io_0001_threads_latency,
     io_0001_threads_throughput,
     io_0001_worker_latency,
     io_0001_worker_throughput,
+    io_005_p_t_latency,
     io_005_threads_latency,
     io_005_threads_throughput,
     io_005_worker_latency,
     io_005_worker_throughput,
+    no_io_one_p_t_latency,
     no_io_threads_latency,
     no_io_threads_throughput,
     no_io_worker_latency,
@@ -20,7 +23,7 @@ from results_wsgi_server import (
 
 
 def plot_bar(data_thread, data_worker, ax, ax_table, io_duration):
-    quantity = [2, 4, 8, 16]
+    quantity = [1, 2, 4, 8, 16, 32]
     woker_values = []
     thread_values = []
     for quant in quantity:
@@ -28,8 +31,10 @@ def plot_bar(data_thread, data_worker, ax, ax_table, io_duration):
         thread_values.append(data_thread[quant]["Avg"])
     ind = np.arange(len(quantity))
     width = 0.20
-    ax.bar(ind, woker_values, width, label="multi threading")
+    ax.bar(ind, woker_values, width, label="multi processing")
     ax.bar(ind + width, thread_values, width, label="multi threading")
+    # barlist_processing[0].set_color("firebrick")
+    # barlist_threading[0].set_color("firebrick")
     ax.legend()
     ax.set_ylabel("req/sec")
     ax.set_xlabel("quantity threads/processes")
@@ -50,17 +55,23 @@ def plot_bar(data_thread, data_worker, ax, ax_table, io_duration):
 
 def plot_line_hdr_histogramm(ax, data, metric):
     linestyles = {
+        1: "-",
         2: "-",
         4: "-.",
         8: "--",
         16: ":",
+        32: (0, (1, 10)),
     }
     component_color = {
         "threads": "orange",
         "processes": "blue",
+        "process & thread": "firebrick",
     }
     row_labels = []
-    quantity = [2, 4, 8, 16]
+    if metric == "process & thread":
+        quantity = [1]
+    else:
+        quantity = [2, 4, 8, 16, 32]
     rows = []
     for quan in quantity:
         row_labels.append(f"{quan} {metric}")
@@ -83,15 +94,18 @@ def plot_line_hdr_histogramm(ax, data, metric):
     return (rows, row_labels)
 
 
-def plot_hdr(data_thread, data_worker, ax, ax_table, io_duration):
+def plot_hdr(data_singel, data_thread, data_worker, ax, ax_table, io_duration):
     col_labels = [
         f"{percentile}th"
         for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
     ]
+    single_rows, singel_labels = plot_line_hdr_histogramm(
+        ax, data_singel, "process & thread"
+    )
     thread_rows, thread_label = plot_line_hdr_histogramm(ax, data_thread, "threads")
     worker_rows, worker_labels = plot_line_hdr_histogramm(ax, data_worker, "processes")
-    rows = thread_rows + worker_rows
-    row_labels = thread_label + worker_labels
+    rows = single_rows + thread_rows + worker_rows
+    row_labels = singel_labels + thread_label + worker_labels
     ax.legend()
     ax.set_ylabel("Latency (milliseconds)")
     ax.set_xlabel("Percentile")
@@ -140,6 +154,7 @@ def plot_graph():
     ax_long_io_throughput_table = fig.add_subplot(spec[5, 1])
 
     plot_hdr(
+        no_io_one_p_t_latency,
         no_io_threads_latency,
         no_io_worker_latency,
         ax_no_io_latency,
@@ -147,6 +162,7 @@ def plot_graph():
         "0",
     )
     plot_hdr(
+        io_0001_p_t_latency,
         io_0001_threads_latency,
         io_0001_worker_latency,
         ax_io_latency,
@@ -154,6 +170,7 @@ def plot_graph():
         "1",
     )
     plot_hdr(
+        io_005_p_t_latency,
         io_005_threads_latency,
         io_005_worker_latency,
         ax_long_io_latency,
@@ -189,20 +206,21 @@ def plot_graph():
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(20, 13),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10]
-    hights = [15, 5]
+    widths = [20]
+    hights = [8, 5]
     spec = gridspec.GridSpec(
         ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_io_latency = fig.add_subplot(spec[0, 0])
     ax_io_latency_table = fig.add_subplot(spec[1, 0])
     plot_hdr(
+        io_0001_p_t_latency,
         io_0001_threads_latency,
         io_0001_worker_latency,
         ax_io_latency,
@@ -215,20 +233,21 @@ def plot_graph():
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(20, 13),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10]
-    hights = [15, 5]
+    widths = [20]
+    hights = [8, 5]
     spec = gridspec.GridSpec(
         ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_io_latency = fig.add_subplot(spec[0, 0])
     ax_io_latency_table = fig.add_subplot(spec[1, 0])
     plot_hdr(
+        io_005_p_t_latency,
         io_005_threads_latency,
         io_005_worker_latency,
         ax_io_latency,
@@ -236,6 +255,58 @@ def plot_graph():
         "50",
     )
     fig.savefig("50_io_wsgi_server.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(12, 8),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [10]
+    hights = [5, 3]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_io_throughput = fig.add_subplot(spec[0, 0])
+    ax_io_throughput_table = fig.add_subplot(spec[1, 0])
+    plot_bar(
+        io_0001_threads_throughput,
+        io_0001_worker_throughput,
+        ax_io_throughput,
+        ax_io_throughput_table,
+        "1",
+    )
+    fig.savefig("1_io_wsgi_server_throughput.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(12, 8),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [10]
+    hights = [5, 3]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_io_throughput = fig.add_subplot(spec[0, 0])
+    ax_io_throughput_table = fig.add_subplot(spec[1, 0])
+    plot_bar(
+        io_005_threads_throughput,
+        io_005_worker_throughput,
+        ax_io_throughput,
+        ax_io_throughput_table,
+        "50",
+    )
+    fig.savefig("50_io_wsgi_server_throughput.pdf")
     plt.close(fig)
 
 

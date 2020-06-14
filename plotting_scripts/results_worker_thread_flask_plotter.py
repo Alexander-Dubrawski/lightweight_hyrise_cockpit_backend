@@ -93,7 +93,7 @@ def plot_line_hdr_histogramm(data, metric):
     return (rows, row_labels)
 
 
-def plot_hdr_histogram(data_worker, data_thread, file_name):
+def plot_hdr_histogram(data_worker, data_thread, file_name, io_duration):
     fig = figure(num=None, figsize=(40, 40), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
@@ -134,7 +134,7 @@ def plot_bar_chart(data_worker, data_thread, file_name):
     ind = np.arange(len(quantity))
     width = 0.20
     plt.bar(ind, woker_values, width, label="multi threading")
-    plt.bar(ind + width, thread_values, width, label="multi processing")
+    plt.bar(ind + width, thread_values, width, label="multi threading")
     plt.legend()
     plt.ylabel("req/sec")
     plt.xlabel("quantity threads/processes")
