@@ -134,7 +134,7 @@ class DatabaseManager(object):
 
     def _call_metric(self, body: Body) -> Response:
         # do some work
-        sleep(0.001)
+        sleep(0.05)
         response = get_response(200)
         return response
 

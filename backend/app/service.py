@@ -137,7 +137,7 @@ class DatabaseService:
 
     @classmethod
     def get_flask_metric(cls) -> Dict:
-        sleep(0.001)
+        sleep(0.05)
         fake_metric_information = {
             "customer": {"size": 10000, "number_columns": 2},
             "supplier": {"size": 400, "number_columns": 1},
