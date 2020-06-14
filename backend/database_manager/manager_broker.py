@@ -35,7 +35,6 @@ def worker_thread(url_thread, context=None):
 
 
 def worker_proxy(number_threads, url_broker):
-    print("Worker started")
     url_thread = "inproc://threads"
     context = Context.instance()
     broker = context.socket(ROUTER)
@@ -48,6 +47,16 @@ def worker_proxy(number_threads, url_broker):
         thread.start()
 
     proxy(broker, threads)
+
+
+def start_database_manager(
+    db_manager_listening, db_manager_port, workload_sub_host, workload_pubsub_port
+):
+
+    with DatabaseManager(
+        db_manager_listening, db_manager_port, workload_sub_host, workload_pubsub_port
+    ) as manager:
+        manager.start()
 
 
 class Broker:
@@ -70,12 +79,6 @@ class Broker:
         self._broker_listening = broker_listening
         self._worker_listening = worker_listening
         self._worker_port = worker_port
-        self._database_manager_obj = DatabaseManager(
-            db_manager_listening,
-            db_manager_port,
-            workload_sub_host,
-            workload_pubsub_port,
-        )
         self._database_manager_calls = [
             "add database",
             "delete database",
@@ -86,6 +89,16 @@ class Broker:
             "status",
         ]
         self._init_server(1)
+        self._database_manager_obj = Process(
+            target=start_database_manager,
+            args=(
+                db_manager_listening,
+                db_manager_port,
+                workload_sub_host,
+                workload_pubsub_port,
+            ),
+        )
+        self._database_manager_obj.start()
         self._workers: List = self._start_worker(
             mumber_worker,
             number_threads,
@@ -141,6 +154,7 @@ class Broker:
                 request: Request = loads(data.decode("utf-8"))
                 call = request["header"]["message"]
                 if call in self._database_manager_calls:
+                    print(call)
                     self._database_manager.send_multipart(multi_part_message)
                 else:
                     self._worker.send_multipart(multi_part_message)
@@ -155,7 +169,7 @@ class Broker:
 
     def close(self) -> None:
         # clean up
-        self._database_manager_obj.close()
+        self._database_manager_obj.terminate()
         self._client.close()
         self._worker.close()
         self._database_manager.close()

@@ -14,7 +14,7 @@ from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
-RUNS = 50_000
+RUNS = 4096
 PERCENTILES = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
 
 
