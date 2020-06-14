@@ -1,29 +1,42 @@
 """CLI used to start the database manager."""
 from backend.settings import (
+    BROKER_LISTENING,
+    BROKER_PORT,
     DB_MANAGER_LISTENING,
     DB_MANAGER_PORT,
+    WORKER_LISTING,
+    WORKER_PORT,
     WORKLOAD_PUBSUB_PORT,
     WORKLOAD_SUB_HOST,
 )
 
-from .manager import DatabaseManager
+from .manager_broker import Broker
+
+NUMBER_WORKER = 1
+NUMBER_THREAD = 1
 
 
 def main() -> None:
     """Create and start a database manager."""
     try:
-        with DatabaseManager(
+        with Broker(
             DB_MANAGER_LISTENING,
             DB_MANAGER_PORT,
+            BROKER_LISTENING,
+            BROKER_PORT,
+            WORKER_LISTING,
+            WORKER_PORT,
             WORKLOAD_SUB_HOST,
             WORKLOAD_PUBSUB_PORT,
-        ) as database_manager:
+            NUMBER_WORKER,
+            NUMBER_THREAD,
+        ) as manager_broker:
             print(
-                f"Database manager running on port {DB_MANAGER_PORT} (Press CTRL+C to quit)"
+                f"Manager Broker running on port {BROKER_PORT} (Press CTRL+C to quit)"
             )
-            database_manager.start()
+            manager_broker.run()
     except KeyboardInterrupt:
-        print("Database Manager closed.")
+        print("Manager Broker closed.")
 
 
 if __name__ == "__main__":
