@@ -2,7 +2,8 @@ from json import loads
 from multiprocessing import Process
 from threading import Thread
 from time import sleep
-from typing import List
+from types import TracebackType
+from typing import List, Optional, Type
 
 from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller, proxy
 
@@ -34,10 +35,11 @@ def worker_thread(url_thread, context=None):
 
 
 def worker_proxy(number_threads, url_broker):
+    print("Worker started")
     url_thread = "inproc://threads"
     context = Context.instance()
     broker = context.socket(ROUTER)
-    broker.bind(url_broker)
+    broker.connect(url_broker)
     threads = context.socket(DEALER)
     threads.bind(url_thread)
 
@@ -87,8 +89,22 @@ class Broker:
         self._workers: List = self._start_worker(
             mumber_worker,
             number_threads,
-            "tcp://127.0.0.1:{:s}".format(self._broker_port),
+            "tcp://127.0.0.1:{:s}".format(self._worker_port),
         )
+
+    def __enter__(self) -> "Broker":
+        """Return self for a context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> Optional[bool]:
+        """Call close with a context manager."""
+        self.close()
+        return None
 
     def _init_server(self, io_threads: int):
         self._context = Context(io_threads=io_threads)
@@ -114,35 +130,33 @@ class Broker:
             workers.append(worker)
         return workers
 
-    def run(self) -> None:  # noqa
+    def run(self) -> None:
         """Start the server loop."""
-        try:
-            while True:
-                socks = dict(self._poller.poll())
+        while True:
+            socks = dict(self._poller.poll())
 
-                if socks.get(self._client) == POLLIN:
-                    multi_part_message = self._client.recv_multipart()
-                    identity, delimeter_fram, data = multi_part_message
-                    request: Request = loads(data.decode("utf-8"))
-                    call = request["header"]["message"]
-                    if call in self._database_manager_calls:
-                        self._database_manager.send_multipart(multi_part_message)
-                    else:
-                        self._worker.send_multipart(multi_part_message)
+            if socks.get(self._client) == POLLIN:
+                multi_part_message = self._client.recv_multipart()
+                identity, delimeter_fram, data = multi_part_message
+                request: Request = loads(data.decode("utf-8"))
+                call = request["header"]["message"]
+                if call in self._database_manager_calls:
+                    self._database_manager.send_multipart(multi_part_message)
+                else:
+                    self._worker.send_multipart(multi_part_message)
 
-                if socks.get(self._worker) == POLLIN:
-                    message = self._worker.recv_multipart()
-                    self._client.send_multipart(message)
+            if socks.get(self._worker) == POLLIN:
+                message = self._worker.recv_multipart()
+                self._client.send_multipart(message)
 
-                if socks.get(self._database_manager) == POLLIN:
-                    message = self._database_manager.recv_multipart()
-                    self._client.send_multipart(message)
-        except KeyboardInterrupt:
-            print("W: interrupt received, stopping…")
-        finally:
-            # clean up
-            self._database_manager_obj.close()
-            self._client.close()
-            self._worker.close()
-            self._database_manager.close()
-            self._context.term()
+            if socks.get(self._database_manager) == POLLIN:
+                message = self._database_manager.recv_multipart()
+                self._client.send_multipart(message)
+
+    def close(self) -> None:
+        # clean up
+        self._database_manager_obj.close()
+        self._client.close()
+        self._worker.close()
+        self._database_manager.close()
+        self._context.term()
