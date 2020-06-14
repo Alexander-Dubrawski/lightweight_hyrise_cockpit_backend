@@ -135,9 +135,9 @@ class Broker:
         self._poller.register(self._worker, POLLIN)
         self._poller.register(self._database_manager, POLLIN)
 
-    def _start_worker(self, mumber_worker, number_threads, url_broker) -> List:
+    def _start_worker(self, number_worker, number_threads, url_broker) -> List:
         workers = []
-        for i in range(number_threads):
+        for i in range(number_worker):
             worker = Process(target=worker_proxy, args=(number_threads, url_broker,))
             worker.start()
             workers.append(worker)
