@@ -1,6 +1,7 @@
 # type: ignore
 from calendar import timegm
 from concurrent import futures
+from json import dumps
 from statistics import mean, median, pstdev
 from time import gmtime, time_ns
 
@@ -12,8 +13,8 @@ from zmq import REQ, Context
 from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
-CLIENTS = [1, 2, 4, 8, 16, 32, 40, 80]
-RUNS = 10_000
+CLIENTS = [1, 2, 4, 8, 16, 32, 64]
+RUNS = 50_000
 PERCENTILES = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
 
 
@@ -67,7 +68,11 @@ def run_clinet(runs):
         end_ts = time_ns()
         latency.append(end_ts - start_ts)
     end_benchmark = time_ns()
-    return {"latency": latency, "run_time": (end_benchmark - start_benchmark)}
+    return {
+        "latency": latency,
+        "run_time": (end_benchmark - start_benchmark),
+        "runs": runs,
+    }
 
 
 def claculate_values(args):
@@ -90,6 +95,7 @@ def claculate_values(args):
             "latency distribution": [
                 round(val / 1_000_000, 3) for val in percentiles_values
             ],
+            "throughput": 1 / (complete_runtime / 1_000_000_000),
         }
     }
 
@@ -123,6 +129,8 @@ def main():
     row_results = run_benchmark()
     formatted_results = run_calculations(row_results)
     print(formatted_results)
+    with open("measurements/zmq_results.txt", "+w") as file:
+        file.write(dumps(formatted_results))
     plot_hdr_histogram(formatted_results, "zmq_hdr")
 
 
