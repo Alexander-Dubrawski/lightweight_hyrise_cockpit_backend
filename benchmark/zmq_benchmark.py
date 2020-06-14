@@ -78,11 +78,14 @@ def run_clinet(runs):
 def claculate_values(args):
     number_clinets, data = args
     complete_latency = []
-    complete_runtime = 0
+    complete_runtime = []
     for element in data:
         complete_latency += element["latency"]
-        complete_runtime += element["run_time"] / RUNS
+        complete_runtime.append(element["run_time"] / element["runs"])
     avg_latency = mean(complete_latency)
+    avg_complete_runtime = mean(complete_runtime)
+    median_complete_runtime = median(complete_runtime)
+    stdev_complete_runtime = pstdev(complete_runtime)
     median_latency = median(complete_latency)
     stdev_latency = pstdev(complete_latency)
     num = np.array(complete_latency)
@@ -95,7 +98,9 @@ def claculate_values(args):
             "latency distribution": [
                 round(val / 1_000_000, 3) for val in percentiles_values
             ],
-            "throughput": 1 / (complete_runtime / 1_000_000_000),
+            "throughput_avg": 1 / (avg_complete_runtime / 1_000_000_000),
+            "throughput_median": 1 / (median_complete_runtime / 1_000_000_000),
+            "throughput_stdev": stdev_complete_runtime,
         }
     }
 
