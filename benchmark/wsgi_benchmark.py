@@ -13,7 +13,7 @@ quantity = [1, 2, 4, 8, 16, 32, 64]
 worker_threads = [(80, 1), (2, 32), (3, 32), (4, 32), (4, 16), (3, 16)]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
 DURATION_IN_SECOUNDS = 600
-WSGI_INIT_TIME = 20
+WSGI_INIT_TIME = 60
 
 
 def create_folder(name):
@@ -119,7 +119,7 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
 def execute_wrk_on_endpoint():
     """Background process to execute wrk."""
     return check_output(
-        f"wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {BACKEND_URL}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {BACKEND_URL}",
         shell=True,
     ).decode("utf-8")
 
