@@ -11,7 +11,8 @@ from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 NUMBER_CLIENTS = 64
 quantity = [1, 2, 4, 8, 16, 32, 64]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
-DURATION_IN_SECOUNDS = 600
+DURATION_IN_SECOUNDS = 1
+WSGI_INIT_TIME = 600
 
 
 def create_folder(name):
@@ -48,6 +49,8 @@ def start_wsgi_server_worker(number_worker):
             "0",
             "--physcpubind",
             "0-19",
+            "pipenv",
+            "run",
             "gunicorn",
             "-w",
             str(number_worker),
@@ -58,7 +61,7 @@ def start_wsgi_server_worker(number_worker):
             "backend.app.controller:app",
         ]
     )
-    sleep(20)
+    sleep(WSGI_INIT_TIME)
     return sub_process
 
 
@@ -70,6 +73,8 @@ def start_wsgi_server_threads(number_threads):
             "0",
             "--physcpubind",
             "0-19",
+            "pipenv",
+            "run",
             "gunicorn",
             "--worker-class=gthread",
             "-w",
@@ -81,11 +86,11 @@ def start_wsgi_server_threads(number_threads):
             "backend.app.controller:app",
         ]
     )
-    sleep(20)
+    sleep(WSGI_INIT_TIME)
     return sub_process
 
 
-def start_wsgi_server_threads_and_worker(number_threads):
+def start_wsgi_server_threads_and_worker(number_threads, number_worker):
     sub_process = Popen(
         [
             "numactl",
@@ -93,10 +98,12 @@ def start_wsgi_server_threads_and_worker(number_threads):
             "0",
             "--physcpubind",
             "0-19",
+            "pipenv",
+            "run",
             "gunicorn",
             "--worker-class=gthread",
             "-w",
-            "1",
+            str(number_worker),
             "--threads",
             str(number_threads),
             "--backlog",
@@ -104,7 +111,7 @@ def start_wsgi_server_threads_and_worker(number_threads):
             "backend.app.controller:app",
         ]
     )
-    sleep(20)
+    sleep(WSGI_INIT_TIME)
     return sub_process
 
 
@@ -120,6 +127,7 @@ def run_benchmark_on_threaded_wsgi(path):
     """Run wrk sequential on all endpoints."""
     results = {}
     for number_threads in quantity:
+        print(f"Run for {number_threads} threads")
         sub_process = start_wsgi_server_threads(number_threads)
         results[number_threads] = execute_wrk_on_endpoint(number_threads)
         with open(f"{path}/threaded_results.txt", "a+") as file:
@@ -134,6 +142,7 @@ def run_benchmark_on_worker_wsgi(path):
     """Run wrk sequential on all endpoints."""
     results = {}
     for number_worker in quantity:
+        print(f"Run for {number_worker} workers")
         sub_process = start_wsgi_server_worker(number_worker)
         results[number_worker] = execute_wrk_on_endpoint(number_worker)
         with open(f"{path}/worker_results.txt", "a+") as file:
@@ -157,3 +166,7 @@ def run():
         file.write(dumps(formatted_results["threads"]))
     with open(f"{path}/worker_results.txt", "+w") as file:
         file.write(dumps(formatted_results["worker"]))
+
+
+if __name__ == "__main__":
+    run()  # type: ignore
