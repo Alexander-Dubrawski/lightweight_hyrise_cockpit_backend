@@ -1,7 +1,6 @@
 """Tool for executing wrk benchmark."""
 import signal
 from json import dumps
-from multiprocessing import Process
 from subprocess import check_output
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
@@ -19,8 +18,7 @@ from .wrk_benchmark_helper import (
 NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 64]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 DURATION_IN_MINUTES = 60
-DURATION_IN_SECOUNDS_PARALLEL = 10
-ENDPOINTS = ["manager_time_intense_metric", "manager_metric", "flask_metric"]
+ENDPOINTS = ["manager_metric", "flask_metric"]
 
 
 def execute_wrk_on_endpoint(url, number_clinets):
@@ -29,25 +27,6 @@ def execute_wrk_on_endpoint(url, number_clinets):
         f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 10s {url}",
         shell=True,
     ).decode("utf-8")
-
-
-def wrk_background_process(url, endpoint, shared_data, number_clinets):
-    """Background process to execute wrk."""
-    shared_data[endpoint] = check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS_PARALLEL}s --timeout 10s {url}",
-        shell=True,
-    ).decode("utf-8")
-
-
-def create_wrk_processes(shared_data, number_client, enpoints):
-    """Create one wrk process per endpoint."""
-    return [
-        Process(
-            target=wrk_background_process,
-            args=(f"{BACKEND_URL}/{end_point}", end_point, shared_data, number_client),
-        )
-        for end_point in enpoints
-    ]
 
 
 def run_wrk_sequential(enpoints, path):
