@@ -2,7 +2,7 @@ from calendar import timegm
 from datetime import datetime
 from json import loads
 from os import mkdir
-from subprocess import Popen
+from subprocess import Popen, run
 from time import gmtime, sleep
 
 from requests import delete, post
@@ -20,8 +20,13 @@ BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
 WSGI_INIT_TIME = 20
 
 
+def stop_wsgi_server():
+    run(["fuser", "-k", f"{BACKEND_PORT}/tcp"])
+    sleep(WSGI_INIT_TIME)
+
+
 def start_wsgi_server(number_threads, number_worker):
-    sub_process = Popen(
+    run(
         [
             "numactl",
             "-m",
@@ -31,7 +36,7 @@ def start_wsgi_server(number_threads, number_worker):
             "pipenv",
             "run",
             "gunicorn",
-            "-w",
+            "--daemon" "-w",
             str(number_worker),
             "--threads",
             str(number_threads),
@@ -41,7 +46,6 @@ def start_wsgi_server(number_threads, number_worker):
         ]
     )
     sleep(WSGI_INIT_TIME)
-    return sub_process
 
 
 def start_manager():

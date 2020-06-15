@@ -1,9 +1,8 @@
-import signal
 from calendar import timegm
 from datetime import datetime
 from json import dumps, loads
 from os import mkdir
-from subprocess import Popen, check_output
+from subprocess import check_output, run
 from time import gmtime, sleep
 
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
@@ -43,7 +42,7 @@ def format_results(results):
 
 
 def start_wsgi_server_worker(number_worker):
-    sub_process = Popen(
+    run(
         [
             "numactl",
             "-m",
@@ -53,6 +52,7 @@ def start_wsgi_server_worker(number_worker):
             "pipenv",
             "run",
             "gunicorn",
+            "--daemon",
             "-w",
             str(number_worker),
             "--threads",
@@ -63,11 +63,10 @@ def start_wsgi_server_worker(number_worker):
         ]
     )
     sleep(WSGI_INIT_TIME)
-    return sub_process
 
 
 def start_wsgi_server_threads(number_threads):
-    sub_process = Popen(
+    run(
         [
             "numactl",
             "-m",
@@ -77,6 +76,7 @@ def start_wsgi_server_threads(number_threads):
             "pipenv",
             "run",
             "gunicorn",
+            "--daemon",
             "--worker-class=gthread",
             "-w",
             "1",
@@ -88,11 +88,10 @@ def start_wsgi_server_threads(number_threads):
         ]
     )
     sleep(WSGI_INIT_TIME)
-    return sub_process
 
 
 def start_wsgi_server_threads_and_worker(number_threads, number_worker):
-    sub_process = Popen(
+    run(
         [
             "numactl",
             "-m",
@@ -102,6 +101,7 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
             "pipenv",
             "run",
             "gunicorn",
+            "--daemon",
             "--worker-class=gthread",
             "-w",
             str(number_worker),
@@ -113,7 +113,6 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
         ]
     )
     sleep(WSGI_INIT_TIME)
-    return sub_process
 
 
 def execute_wrk_on_endpoint():
@@ -129,13 +128,13 @@ def run_benchmark_on_threaded_wsgi(path):
     results = {}
     for number_threads in quantity:
         print(f"Run for {number_threads} threads")
-        sub_process = start_wsgi_server_threads(number_threads)
+        start_wsgi_server_threads(number_threads)
         results[number_threads] = execute_wrk_on_endpoint()
         with open(f"{path}/threaded_results.txt", "a+") as file:
             file.write(f"\n{number_threads} threads\n")
             file.write(results[number_threads])
-        sub_process.send_signal(signal.SIGINT)
-        sub_process.wait()
+        run(["fuser", "-k", f"{BACKEND_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
     return results
 
 
@@ -144,13 +143,13 @@ def run_benchmark_on_worker_wsgi(path):
     results = {}
     for number_worker in quantity:
         print(f"Run for {number_worker} workers")
-        sub_process = start_wsgi_server_worker(number_worker)
+        start_wsgi_server_worker(number_worker)
         results[number_worker] = execute_wrk_on_endpoint()
         with open(f"{path}/worker_results.txt", "a+") as file:
             file.write(f"\n{number_worker} workers\n")
             file.write(results[number_worker])
-        sub_process.send_signal(signal.SIGINT)
-        sub_process.wait()
+        run(["fuser", "-k", f"{BACKEND_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
     return results
 
 
@@ -161,7 +160,7 @@ def run_benchmark_on_worker_thread_wsgi(path):
         print(
             f"Run for {number_worker_thread[0]} workers and {number_worker_thread[1]} threads"
         )
-        sub_process = start_wsgi_server_threads_and_worker(
+        start_wsgi_server_threads_and_worker(
             number_thread=number_worker_thread[1], number_worker=number_worker_thread[0]
         )
         results[number_worker_thread] = execute_wrk_on_endpoint()
@@ -170,12 +169,12 @@ def run_benchmark_on_worker_thread_wsgi(path):
                 f"\n{number_worker_thread[0]} workers and {number_worker_thread[1]} threads\n"
             )
             file.write(results[number_worker_thread])
-        sub_process.send_signal(signal.SIGINT)
-        sub_process.wait()
+        run(["fuser", "-k", f"{BACKEND_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
     return results
 
 
-def run():
+def run_bnechmark():
     path = create_folder("wsgi_benchmark")
     results = {}
     results["threads"] = run_benchmark_on_threaded_wsgi(path)
@@ -195,4 +194,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()  # type: ignore
+    run_bnechmark()  # type: ignore

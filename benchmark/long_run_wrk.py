@@ -13,6 +13,7 @@ from .wrk_benchmark_helper import (
     start_manager,
     start_workload_generator,
     start_wsgi_server,
+    stop_wsgi_server,
 )
 
 NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 64]
@@ -35,6 +36,7 @@ def run_wrk_sequential(enpoints, path):
     for number_client in NUMBER_CLIENTS:
         sequential_results[number_client] = {}
         for endpoint in enpoints:
+            print(f"Run on {endpoint} with {number_client} clients")
             sequential_results[number_client][endpoint] = execute_wrk_on_endpoint(
                 f"{BACKEND_URL}/{endpoint}", number_client
             )
@@ -46,7 +48,7 @@ def run_wrk_sequential(enpoints, path):
 def run_benchmark():
     """Run sequential and parallel wrk benchmark on endpoints."""
     path = create_folder("wrk_benchmark")
-    server = start_wsgi_server(1, 1)
+    start_wsgi_server(1, 1)
     manager = start_manager()
     generator = start_workload_generator()
     sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"], path)
@@ -56,13 +58,6 @@ def run_benchmark():
     with open(f"{path}/formatted_sequential_results.txt", "+w") as file:
         file.write(dumps(formatted_sequential_results))
 
-    server.send_signal(signal.SIGINT)
-    server.wait()
-    manager.send_signal(signal.SIGINT)
-    manager.wait()
-    generator.send_signal(signal.SIGINT)
-    generator.wait()
-
     plot_charts(
         formatted_sequential_results,
         path,
@@ -70,6 +65,12 @@ def run_benchmark():
         "theoretical_sequential",
         "client",
     )
+
+    stop_wsgi_server()
+    manager.send_signal(signal.SIGINT)
+    manager.wait()
+    generator.send_signal(signal.SIGINT)
+    generator.wait()
 
 
 if __name__ == "__main__":
