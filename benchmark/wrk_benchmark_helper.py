@@ -2,7 +2,8 @@ from calendar import timegm
 from datetime import datetime
 from json import loads
 from os import mkdir
-from time import gmtime
+from subprocess import Popen
+from time import gmtime, sleep
 
 from requests import delete, post
 
@@ -16,6 +17,69 @@ from .graph_plotter import (
 )
 
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
+WSGI_INIT_TIME = 20
+
+
+def start_wsgi_server(number_threads, number_worker):
+    sub_process = Popen(
+        [
+            "numactl",
+            "-m",
+            "0",
+            "--physcpubind",
+            "0-19",
+            "pipenv",
+            "run",
+            "gunicorn",
+            "-w",
+            str(number_worker),
+            "--threads",
+            str(number_threads),
+            "--backlog",
+            "80",
+            "backend.app.controller:app",
+        ]
+    )
+    sleep(WSGI_INIT_TIME)
+    return sub_process
+
+
+def start_manager():
+    sub_process = Popen(
+        [
+            "numactl",
+            "-m",
+            "0",
+            "--physcpubind",
+            "0-19",
+            "pipenv",
+            "run",
+            "python",
+            "-m",
+            "backend.database_manager.cli",
+        ]
+    )
+    sleep(WSGI_INIT_TIME)
+    return sub_process
+
+
+def start_workload_generator():
+    sub_process = Popen(
+        [
+            "numactl",
+            "-m",
+            "0",
+            "--physcpubind",
+            "0-19",
+            "pipenv",
+            "run",
+            "python",
+            "-m",
+            "backend.workload_generator.cli",
+        ]
+    )
+    sleep(WSGI_INIT_TIME)
+    return sub_process
 
 
 def add_database(database_id: str):
@@ -120,9 +184,6 @@ def create_folder(name):
     ts = timegm(gmtime())
     path = f"measurements/{name}_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
     mkdir(path)
-    mkdir(f"{path}/theoretical_sequential")
-    mkdir(f"{path}/theoretical_parallel")
-    mkdir(f"{path}/user_parallel")
     return path
 
 
