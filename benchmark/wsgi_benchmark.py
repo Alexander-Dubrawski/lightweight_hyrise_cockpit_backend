@@ -12,8 +12,8 @@ NUMBER_CLIENTS = 64
 quantity = [1, 2, 4, 8, 16, 32, 64]
 worker_threads = [(80, 1), (2, 32), (3, 32), (4, 32), (4, 16), (3, 16)]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
-DURATION_IN_SECOUNDS = 1
-WSGI_INIT_TIME = 600
+DURATION_IN_SECOUNDS = 600
+WSGI_INIT_TIME = 20
 
 
 def create_folder(name):

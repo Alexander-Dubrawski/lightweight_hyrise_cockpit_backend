@@ -20,11 +20,11 @@ done = function(summary, latency, requests)
             )
         )
     io.write("latency_distribution:\n{")
-    for _, p in pairs({1, 25, 50, 75.000, 90, 99.000, 99.900 ,99.990 }) do
+    for _, p in pairs({1, 25, 50, 75, 90, 99, 99.9 }) do
         n = latency:percentile(p)
         io.write(string.format('"%g%%": %.3f, ', p, (n / 1000)))
     end
-    io.write(string.format('"%g%%": %.3f }\n', 99.999, (latency:percentile(99.999) / 1000)))
+    io.write(string.format('"%g%%": %.3f }\n', 99.99, (latency:percentile(99.99) / 1000)))
     percentiles = {} 
     for i=1, 99 do
         percentiles[i] = i

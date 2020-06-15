@@ -109,8 +109,7 @@ def plot_hdr_histogram_for_single_endpoint(
     fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
-        f"{percentile}th"
-        for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
+        f"{percentile}th" for percentile in [1, 25, 50, 75, 90, 99, 99.9, 99.99]
     ]
     rows = []
     row_labels = []
@@ -158,8 +157,7 @@ def plot_hdr_histogram_for_endpoint(
     fig = figure(num=None, figsize=(40, 40), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
     col_labels = [
-        f"{percentile}th"
-        for percentile in [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
+        f"{percentile}th" for percentile in [1, 25, 50, 75, 90, 99, 99.9, 99.99]
     ]
     linestyles = {
         1: "-",
