@@ -25,7 +25,7 @@ ENDPOINTS = ["manager_metric", "flask_metric"]
 def execute_wrk_on_endpoint(url, number_clinets):
     """Background process to execute wrk."""
     return check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 10s {url}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {url}",
         shell=True,
     ).decode("utf-8")
 

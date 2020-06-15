@@ -11,7 +11,7 @@ NUMBER_CLIENTS = 64
 quantity = [1, 2, 4, 8, 16, 32, 64]
 worker_threads = [(80, 1), (2, 32), (3, 32), (4, 32), (4, 16), (3, 16)]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
-DURATION_IN_SECOUNDS = 600
+DURATION_IN_MINUTES = 60
 WSGI_INIT_TIME = 60
 
 
@@ -133,7 +133,7 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
 def execute_wrk_on_endpoint():
     """Background process to execute wrk."""
     return check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {BACKEND_URL}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {BACKEND_URL}",
         shell=True,
     ).decode("utf-8")
 
@@ -176,7 +176,8 @@ def run_benchmark_on_worker_thread_wsgi(path):
             f"Run for {number_worker_thread[0]} workers and {number_worker_thread[1]} threads"
         )
         start_wsgi_server_threads_and_worker(
-            number_thread=number_worker_thread[1], number_worker=number_worker_thread[0]
+            number_threads=number_worker_thread[1],
+            number_worker=number_worker_thread[0],
         )
         results[number_worker_thread] = execute_wrk_on_endpoint()
         with open(f"{path}/worker_thread_results.txt", "a+") as file:
@@ -199,6 +200,9 @@ def run_bnechmark():
     formatted_results["threads"] = format_results(results["threads"])
     formatted_results["worker"] = format_results(results["worker"])
     formatted_results["thread_worker"] = format_results(results["thread_worker"])
+    formatted_results["thread_worker"] = {
+        str(k): v for k, v in formatted_results["thread_worker"].items()
+    }
 
     with open(f"{path}/formatted_thread_results.txt", "+w") as file:
         file.write(dumps(formatted_results["threads"]))
