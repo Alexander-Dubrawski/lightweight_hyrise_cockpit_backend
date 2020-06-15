@@ -10,6 +10,7 @@ from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
 NUMBER_CLIENTS = 64
 quantity = [1, 2, 4, 8, 16, 32, 64]
+worker_threads = [(80, 1), (2, 32), (3, 32), (4, 32), (4, 16), (3, 16)]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
 DURATION_IN_SECOUNDS = 1
 WSGI_INIT_TIME = 600
@@ -115,7 +116,7 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
     return sub_process
 
 
-def execute_wrk_on_endpoint(number_clinets):
+def execute_wrk_on_endpoint():
     """Background process to execute wrk."""
     return check_output(
         f"wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_SECOUNDS}s --timeout 10s {BACKEND_URL}",
@@ -129,7 +130,7 @@ def run_benchmark_on_threaded_wsgi(path):
     for number_threads in quantity:
         print(f"Run for {number_threads} threads")
         sub_process = start_wsgi_server_threads(number_threads)
-        results[number_threads] = execute_wrk_on_endpoint(number_threads)
+        results[number_threads] = execute_wrk_on_endpoint()
         with open(f"{path}/threaded_results.txt", "a+") as file:
             file.write(f"\n{number_threads} threads\n")
             file.write(results[number_threads])
@@ -144,10 +145,31 @@ def run_benchmark_on_worker_wsgi(path):
     for number_worker in quantity:
         print(f"Run for {number_worker} workers")
         sub_process = start_wsgi_server_worker(number_worker)
-        results[number_worker] = execute_wrk_on_endpoint(number_worker)
+        results[number_worker] = execute_wrk_on_endpoint()
         with open(f"{path}/worker_results.txt", "a+") as file:
             file.write(f"\n{number_worker} workers\n")
             file.write(results[number_worker])
+        sub_process.send_signal(signal.SIGINT)
+        sub_process.wait()
+    return results
+
+
+def run_benchmark_on_worker_thread_wsgi(path):
+    """Run wrk sequential on all endpoints."""
+    results = {}
+    for number_worker_thread in worker_threads:
+        print(
+            f"Run for {number_worker_thread[0]} workers and {number_worker_thread[1]} threads"
+        )
+        sub_process = start_wsgi_server_threads_and_worker(
+            number_thread=number_worker_thread[1], number_worker=number_worker_thread[0]
+        )
+        results[number_worker_thread] = execute_wrk_on_endpoint()
+        with open(f"{path}/worker_thread_results.txt", "a+") as file:
+            file.write(
+                f"\n{number_worker_thread[0]} workers and {number_worker_thread[1]} threads\n"
+            )
+            file.write(results[number_worker_thread])
         sub_process.send_signal(signal.SIGINT)
         sub_process.wait()
     return results
@@ -158,14 +180,18 @@ def run():
     results = {}
     results["threads"] = run_benchmark_on_threaded_wsgi(path)
     results["worker"] = run_benchmark_on_worker_wsgi(path)
+    results["thread_worker"] = run_benchmark_on_worker_thread_wsgi(path)
     formatted_results = {}
     formatted_results["threads"] = format_results(results["threads"])
     formatted_results["worker"] = format_results(results["worker"])
+    formatted_results["thread_worker"] = format_results(results["thread_worker"])
 
     with open(f"{path}/formatted_thread_results.txt", "+w") as file:
         file.write(dumps(formatted_results["threads"]))
-    with open(f"{path}/worker_results.txt", "+w") as file:
+    with open(f"{path}/formatted_worker_results.txt", "+w") as file:
         file.write(dumps(formatted_results["worker"]))
+    with open(f"{path}/formatted_worker_thread_results.txt", "+w") as file:
+        file.write(dumps(formatted_results["thread_worker"]))
 
 
 if __name__ == "__main__":
