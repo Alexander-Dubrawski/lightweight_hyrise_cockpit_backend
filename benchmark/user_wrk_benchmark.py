@@ -83,7 +83,7 @@ def run_user_benchmark(number_databases, path):
     results = {}
     system_data = {}
     for number_database in number_databases:
-        print(f"Execute benchmark with{number_database}")
+        print(f"Execute benchmark with {number_database} databases")
         parallel_results, monitor_system_data = execute_in_user_context(number_database)
         results[number_database] = parallel_results
         system_data[number_database] = monitor_system_data
@@ -111,10 +111,8 @@ def run_benchmark():
     user_results, system_data = run_user_benchmark(NUMBER_DATABASES, path)
     print_user_results(user_results)
     formatted_user_results = format_results(user_results)
-    formatted_system_data = format_data(system_data, NUMBER_DATABASES)
     with open(f"{path}/formatted_user_results.txt", "+w") as file:
         file.write(dumps(formatted_user_results))
-    write_to_csv(formatted_system_data, path, NUMBER_DATABASES)
     stop_wsgi_server()
     manager.send_signal(signal.SIGINT)
     manager.wait()
