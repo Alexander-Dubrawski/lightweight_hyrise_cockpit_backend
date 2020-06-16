@@ -14,8 +14,8 @@ from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
-RUNS = 50_000
-PERCENTILES = [1, 25, 50, 75.000, 90, 99.000, 99.900, 99.990, 99.999]
+RUNS = 100_000
+PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
 
 
 def plot_hdr_histogram(results, file_name):

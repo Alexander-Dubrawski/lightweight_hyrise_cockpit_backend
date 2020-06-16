@@ -23,7 +23,7 @@ from results_wsgi_server import (
 
 
 def plot_bar(data_thread, data_worker, ax, ax_table, io_duration):
-    quantity = [1, 2, 4, 8, 16, 32]
+    quantity = [1, 2, 4, 8, 16, 32, 64]
     woker_values = []
     thread_values = []
     for quant in quantity:
@@ -61,6 +61,7 @@ def plot_line_hdr_histogramm(ax, data, metric):
         8: "--",
         16: ":",
         32: (0, (1, 10)),
+        64: (0, (3, 5, 1, 5)),
     }
     component_color = {
         "threads": "orange",
@@ -71,7 +72,7 @@ def plot_line_hdr_histogramm(ax, data, metric):
     if metric == "process & thread":
         quantity = [1]
     else:
-        quantity = [2, 4, 8, 16, 32]
+        quantity = [2, 4, 8, 16, 32, 64]
     rows = []
     for quan in quantity:
         row_labels.append(f"{quan} {metric}")
