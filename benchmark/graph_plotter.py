@@ -57,25 +57,25 @@ def plot_bar_chart_for_endpoint(
 def plot_hdr_historgram_for_system_data(results, path, duration, metric):
     fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
     plt.rcParams.update({"font.size": 22})
-    col_labels = [f"{s}sec" for s in range(duration)]
+    # col_labels = [f"{s}sec" for s in range(duration)]
     linestyles = {1: "-", 10: ":", 20: "-.", 40: "--", 80: "-."}
     component_color = {
         "back_end": "orange",
         "generator": "blue",
         "manager": "purple",
     }
-    rows = []
-    row_labels = []
+    # rows = []
+    # row_labels = []
     for number, data in results.items():
         for component, results in data[metric].items():
-            row_labels.append(f"{component} & {number} database object")
-            row = []
+            # row_labels.append(f"{component} & {number} database object")
+            # row = []
             x_values = [i for i in range(duration)]
             y_values = []
             for value in results["usage"]:
                 y_values.append(value)
-                row.append(value)
-            rows.append(row)
+                # row.append(value)
+            # rows.append(row)
             plt.plot(
                 x_values,
                 y_values,
@@ -89,15 +89,15 @@ def plot_hdr_historgram_for_system_data(results, path, duration, metric):
     plt.xlabel("time in sec")
     plt.title(f"{metric} usage of back-end components")
     plt.grid()
-    plt.table(
-        cellText=rows,
-        rowLabels=row_labels,
-        cellLoc="center",
-        colLabels=col_labels,
-        loc="bottom",
-        bbox=[0, -0.29, 1, 0.17],
-    )
-    plt.subplots_adjust(left=0.2, bottom=0.2)
+    # plt.table(
+    #     cellText=rows,
+    #     rowLabels=row_labels,
+    #     cellLoc="center",
+    #     colLabels=col_labels,
+    #     loc="bottom",
+    #     bbox=[0, -0.29, 1, 0.17],
+    # )
+    # plt.subplots_adjust(left=0.2, bottom=0.2)
     ts = timegm(gmtime())
     plt.savefig(f"{path}/system_{metric}_{ts}.pdf")
     plt.close(fig)
