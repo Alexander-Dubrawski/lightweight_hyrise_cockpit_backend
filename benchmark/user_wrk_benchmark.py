@@ -14,7 +14,6 @@ from .system_benchmark import format_data, fromat_avg_data, monitor_system, writ
 from .wrk_benchmark_helper import (
     add_database,
     format_results,
-    plot_system_data,
     print_user_results,
     remove_database,
     start_manager,
@@ -45,14 +44,14 @@ def create_folder(name):
 def wrk_background_process(url, endpoint, shared_data):
     """Background process to execute wrk."""
     shared_data[endpoint] = check_output(
-        f"wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {url}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {url}",
         shell=True,
     ).decode("utf-8")
 
 
-def create_wrk_processes(shared_data, number_client, enpoints):
+def create_wrk_processes(shared_data, number_client):
     """Create one wrk process per endpoint."""
-    Process(
+    return Process(
         target=wrk_background_process,
         args=(f"{BACKEND_URL}/{ENDPOINT}", ENDPOINT, shared_data),
     )
@@ -66,13 +65,11 @@ def execute_in_user_context(number_database):
         add_database(str(i))
     start_workload()
     start_workers()
-    processes = create_wrk_processes(shard_dict, 8, ["manager_metric", "flask_metric"])
-    for process in processes:
-        process.start()
+    process = create_wrk_processes(shard_dict, 8)
+    process.start()
     monitor_system_data = monitor_system(DURATION_IN_MINUTES * 60)
-    for process in processes:
-        process.join()
-        process.terminate()
+    process.join()
+    process.terminate()
     stop_workers()
     stop_workload()
     for i in range(number_database):
@@ -86,6 +83,7 @@ def run_user_benchmark(number_databases, path):
     results = {}
     system_data = {}
     for number_database in number_databases:
+        print(f"Execute benchmark with{number_database}")
         parallel_results, monitor_system_data = execute_in_user_context(number_database)
         results[number_database] = parallel_results
         system_data[number_database] = monitor_system_data
@@ -95,7 +93,13 @@ def run_user_benchmark(number_databases, path):
         with open(
             f"{path}/{number_database}_formatted_system_results.txt", "+w"
         ) as file:
-            file.write(dumps(format_data(system_data, [number_database])))
+            file.write(
+                dumps(
+                    fromat_avg_data(
+                        [number_database], format_data(system_data, [number_database])
+                    )
+                )
+            )
     return (results, system_data)
 
 
@@ -108,14 +112,9 @@ def run_benchmark():
     print_user_results(user_results)
     formatted_user_results = format_results(user_results)
     formatted_system_data = format_data(system_data, NUMBER_DATABASES)
-    measurements = fromat_avg_data(NUMBER_DATABASES, formatted_system_data)
-    with open(f"{path}/measurements_system.txt", "+w") as file:
-        file.write(dumps(measurements))
     with open(f"{path}/formatted_user_results.txt", "+w") as file:
         file.write(dumps(formatted_user_results))
     write_to_csv(formatted_system_data, path, NUMBER_DATABASES)
-    plot_system_data(measurements, path, DURATION_IN_MINUTES * 60, "CPU")
-    plot_system_data(measurements, path, DURATION_IN_MINUTES * 60, "MEMORY")
     stop_wsgi_server()
     manager.send_signal(signal.SIGINT)
     manager.wait()
