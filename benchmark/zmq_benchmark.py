@@ -99,6 +99,8 @@ def run_clinet(runs):
         end_ts = time_ns()
         latency.append(end_ts - start_ts)
     end_benchmark = time_ns()
+    socket.close()
+    context.term()
     return {
         "latency": latency,
         "run_time": (end_benchmark - start_benchmark),
