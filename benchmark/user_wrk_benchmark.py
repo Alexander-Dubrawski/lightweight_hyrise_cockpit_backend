@@ -1,4 +1,5 @@
 """Tool for executing wrk benchmark."""
+import signal
 from calendar import timegm
 from datetime import datetime
 from json import dumps
@@ -16,10 +17,14 @@ from .wrk_benchmark_helper import (
     plot_system_data,
     print_user_results,
     remove_database,
+    start_manager,
     start_workers,
     start_workload,
+    start_workload_generator,
+    start_wsgi_server,
     stop_workers,
     stop_workload,
+    stop_wsgi_server,
 )
 
 NUMBER_CLIENTS = 1
@@ -96,6 +101,9 @@ def run_user_benchmark(number_databases, path):
 
 def run_benchmark():
     path = create_folder("user_wrk_benchmark")
+    start_wsgi_server(1, 1)
+    manager = start_manager()
+    generator = start_workload_generator()
     user_results, system_data = run_user_benchmark(NUMBER_DATABASES, path)
     print_user_results(user_results)
     formatted_user_results = format_results(user_results)
@@ -108,3 +116,12 @@ def run_benchmark():
     write_to_csv(formatted_system_data, path, NUMBER_DATABASES)
     plot_system_data(measurements, path, DURATION_IN_MINUTES * 60, "CPU")
     plot_system_data(measurements, path, DURATION_IN_MINUTES * 60, "MEMORY")
+    stop_wsgi_server()
+    manager.send_signal(signal.SIGINT)
+    manager.wait()
+    generator.send_signal(signal.SIGINT)
+    generator.wait()
+
+
+if __name__ == "__main__":
+    run_benchmark()  # type: ignore
