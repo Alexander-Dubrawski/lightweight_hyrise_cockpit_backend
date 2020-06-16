@@ -1,9 +1,12 @@
 # type: ignore
 from calendar import timegm
 from concurrent import futures
+from datetime import datetime
 from json import dumps
+from os import mkdir
 from statistics import mean, median, pstdev
-from time import gmtime, time_ns
+from subprocess import Popen, run
+from time import gmtime, sleep, time_ns
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +17,9 @@ from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
-RUNS = 100_000
+RUNS = 80_000
 PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
+WSGI_INIT_TIME = 60
 
 
 def plot_hdr_histogram(results, file_name):
@@ -53,6 +57,33 @@ def plot_hdr_histogram(results, file_name):
     ts = timegm(gmtime())
     plt.savefig(f"measurements/{file_name}_{ts}.pdf")
     plt.close(fig)
+
+
+def create_folder(name):
+    """Create folder to save benchmark results."""
+    ts = timegm(gmtime())
+    path = f"measurements/{name}_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
+    mkdir(path)
+    return path
+
+
+def start_manager():
+    sub_process = Popen(
+        [
+            "numactl",
+            "-m",
+            "0",
+            "--physcpubind",
+            "0-19",
+            "pipenv",
+            "run",
+            "python",
+            "-m",
+            "backend.database_manager.cli",
+        ]
+    )
+    sleep(WSGI_INIT_TIME)
+    return sub_process
 
 
 def run_clinet(runs):
@@ -112,7 +143,7 @@ def run_calculations(data):
     return combined_res
 
 
-def run_benchmark():
+def run_benchmark(path):
     results = {}
     for n_client in CLIENTS:
         print(f"running benchmark with {n_client} clients")
@@ -122,16 +153,23 @@ def run_benchmark():
         with futures.ProcessPoolExecutor(worker) as executor:
             res = executor.map(run_clinet, arguments)
         results[n_client] = list(res)
+        with open(f"{path}/{n_client}_clients_results.txt", "+w") as file:
+            file.write(dumps(results[n_client]))
+        with open(f"{path}/{n_client}_clients_formatted_results.txt", "+w") as file:
+            file.write(dumps(claculate_values((n_client, results[n_client]))))
     return results
 
 
 def main():
-    row_results = run_benchmark()
+    path = create_folder("req_rep_zmq")
+    _ = start_manager()
+    row_results = run_benchmark(path)
     formatted_results = run_calculations(row_results)
     print(formatted_results)
-    with open("measurements/zmq_results.txt", "+w") as file:
+    with open(f"{path}/zmq_results.txt", "+w") as file:
         file.write(dumps(formatted_results))
     plot_hdr_histogram(formatted_results, "zmq_hdr")
+    run(["fuser", "-k", f"{DB_MANAGER_PORT}/tcp"])
 
 
 if __name__ == "__main__":

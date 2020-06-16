@@ -15,6 +15,7 @@ from zmq import REQ, Context
 from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
 
+# NUmmer Clients erhöhen
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
 RUNS = 100_000
 PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
