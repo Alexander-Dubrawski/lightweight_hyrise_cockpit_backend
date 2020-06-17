@@ -28,7 +28,9 @@ class DatabaseManager(object):
         server_calls: Dict[
             str, Tuple[Callable[[Body], Response], Optional[Dict]]
         ] = self._get_server_calls()
-        self._server = Server(db_manager_listening, db_manager_port, server_calls)
+        self._server = Server(
+            db_manager_listening, db_manager_port, server_calls, connect_server=True
+        )
 
     def __enter__(self) -> "DatabaseManager":
         """Return self for a context manager."""
@@ -54,7 +56,6 @@ class DatabaseManager(object):
             "get queue length": self._call_get_queue_length,
             "status": self._call_status,
             "get time intense metric": self._call_time_intense_metric,
-            "get metric": self._call_metric,
         }
 
     def _call_add_database(self, body: Body) -> Response:
@@ -129,12 +130,6 @@ class DatabaseManager(object):
     def _call_time_intense_metric(self, body: Body) -> Response:
         # do some work
         sleep(0.2)
-        response = get_response(200)
-        return response
-
-    def _call_metric(self, body: Body) -> Response:
-        # do some work
-        sleep(0.05)
         response = get_response(200)
         return response
 

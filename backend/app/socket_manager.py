@@ -8,8 +8,8 @@ from zmq import REQ, Context, Socket
 from backend.request import Request
 from backend.response import Response
 from backend.settings import (
-    DB_MANAGER_HOST,
-    DB_MANAGER_PORT,
+    BROKER_LISTENING,
+    BROKER_PORT,
     GENERATOR_HOST,
     GENERATOR_PORT,
 )
@@ -75,9 +75,7 @@ class ManagerSocket:
 
     def __init__(self) -> None:
         """Initialize a ManagerSocket."""
-        self._socket: BaseSocket = BaseSocket(
-            f"tcp://{DB_MANAGER_HOST}:{DB_MANAGER_PORT}"
-        )
+        self._socket: BaseSocket = BaseSocket(f"tcp://{BROKER_LISTENING}:{BROKER_PORT}")
         self._socket.open()
 
     def __enter__(self) -> "ManagerSocket":
