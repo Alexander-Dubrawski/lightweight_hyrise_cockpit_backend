@@ -1,9 +1,36 @@
 # type: ignore
+from datetime import timedelta
+
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .wrk_scenario_results import latency, throughput
+from .wrk_scenario_results import cpu_usage, latency, throughput
+
+
+def plot_cpu_usage(date, ax, component, number_dbs):
+    component_color = {
+        1: "orange",
+        10: "blue",
+        20: "darkgreen",
+        40: "firebrick",
+    }
+    x_values = [str(timedelta(seconds=ts)) for ts in date[component]["time_stamp"]]
+    y_values = date[component]["usage"]
+    ax.plot(
+        x_values,
+        y_values,
+        label=f"database obj {number_dbs}",
+        linewidth=4.0,
+        color=component_color[number_dbs],
+    )
+    ax.legend()
+    ax.set_ylabel("CPU usage in %")
+    ax.set_xlabel("time")
+    start, end = ax.get_xlim()
+    ax.xaxis.set_ticks(np.arange(start, end, 600))
+    ax.set_title(f"CPU usage {component}")
+    ax.grid()
 
 
 def plot_hdr_histogramm_1_90(data, ax):
@@ -145,13 +172,13 @@ def main():
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
         num=None,
-        figsize=(9, 9),
+        figsize=(20, 10),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [8]
+    widths = [20]
     hights = [7, 3]
     spec = gridspec.GridSpec(
         ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
@@ -160,6 +187,28 @@ def main():
     ax_througput_table = fig.add_subplot(spec[1, 0])
     plot_bar(throughput, ax_throughput, ax_througput_table)
     fig.savefig("user_scenario_throughput.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(20, 10),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [20]
+    hights = [10]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_manager = fig.add_subplot(spec[0, 0])
+    # ax_wsgi = fig.add_subplot(spec[0, 1])
+    for n_db in [1, 10, 20, 40]:
+        plot_cpu_usage(cpu_usage[n_db], ax_manager, "manager", n_db)
+        # plot_cpu_usage(cpu_usage[n_db], ax_wsgi, "back_end", n_db)
+    fig.savefig("user_scenario_cpu.pdf")
     plt.close(fig)
 
 

@@ -5,7 +5,7 @@ from json import loads
 def read_json(number_db):
     with open(f"measurements/{number_db}_formatted_system_results.txt", "r") as file:
         content = loads(file.read())
-    return content
+    return content[str(number_db)]["CPU"]
 
 
 def get_latency(number_db):
