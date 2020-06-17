@@ -7,56 +7,26 @@ from statistics import mean, median, pstdev
 from subprocess import Popen, run
 from time import gmtime, sleep, time_ns
 
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.pyplot import figure
 from zmq import REQ, Context
 
 from backend.request import Header, Request
-from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
+from backend.settings import BROKER_LISTENING, BROKER_PORT
 
-# NUmmer Clients erhöhen
-CLIENTS = [1, 2, 4, 8, 16, 32, 64]
+quantity = [2, 4, 8, 16, 32, 64, 128]
+worker_threads = [
+    (1, 1),
+    (2, 32),
+    (3, 32),
+    (4, 16),
+    (3, 16),
+    (4, 16),
+    (2, 64),
+]
 RUNS = 100_000
+NUMBER_CLIENTS = 64
 PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
 WSGI_INIT_TIME = 20
-
-
-def plot_hdr_histogram(results, file_name):
-    fig = figure(num=None, figsize=(40, 30), dpi=300, facecolor="w", edgecolor="k")
-    plt.rcParams.update({"font.size": 22})
-    col_labels = [f"{percentile}th" for percentile in PERCENTILES]
-    rows = []
-    row_labels = []
-    for number, data in results.items():
-        row_labels.append(f"clients: {number}")
-        row = []
-        y_values = []
-        x_values = [str(percentile) for percentile in PERCENTILES]
-        for value in data["latency distribution"]:
-            y_values.append(value)
-            row.append(value)
-        rows.append(row)
-        plt.plot(
-            x_values, y_values, label=f"clients: {number}", linewidth=4.0,
-        )
-    plt.legend()
-    plt.ylabel("Latency (milliseconds)")
-    plt.xlabel("Percentile")
-    plt.title("Latency by Percentile Distribution")
-    plt.grid()
-    plt.table(
-        cellText=rows,
-        rowLabels=row_labels,
-        cellLoc="center",
-        colLabels=col_labels,
-        loc="bottom",
-        bbox=[0, -0.29, 1, 0.17],
-    )
-    plt.subplots_adjust(left=0.2, bottom=0.2)
-    ts = timegm(gmtime())
-    plt.savefig(f"measurements/{file_name}_{ts}.pdf")
-    plt.close(fig)
 
 
 def create_folder(name):
@@ -67,7 +37,7 @@ def create_folder(name):
     return path
 
 
-def start_manager():
+def start_manager(number_workers, number_threads):
     sub_process = Popen(
         [
             "numactl",
@@ -80,6 +50,10 @@ def start_manager():
             "python",
             "-m",
             "backend.database_manager.cli",
+            "-w",
+            str(number_workers),
+            "-t",
+            str(number_threads),
         ]
     )
     sleep(WSGI_INIT_TIME)
@@ -89,7 +63,7 @@ def start_manager():
 def run_clinet(runs):
     context = Context()
     socket = context.socket(REQ)
-    socket.connect(f"tcp://{DB_MANAGER_HOST}:{DB_MANAGER_PORT}")
+    socket.connect(f"tcp://{BROKER_LISTENING}:{BROKER_PORT}")
     latency = []
     start_benchmark = time_ns()
     for _ in range(runs):
@@ -143,29 +117,81 @@ def run_calculations(data):
     return combined_res
 
 
-def run_benchmark(path):
+def run_benchmark_threads(path):
     results = {}
-    for n_client in CLIENTS:
-        print(f"running benchmark with {n_client} clients")
-        results[n_client] = {}
-        worker = n_client
-        arguments = [int(RUNS / n_client) for _ in range(n_client)]
+    for n_thread in quantity:
+        print(f"running benchmark with {n_thread} threads")
+        _ = start_manager(number_workers=1, number_threads=n_thread)
+        results[n_thread] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
         with futures.ProcessPoolExecutor(worker) as executor:
             res = executor.map(run_clinet, arguments)
-        results[n_client] = list(res)
-        with open(f"{path}/{n_client}_clients_results.txt", "+w") as file:
-            file.write(dumps(results[n_client]))
+        results[n_thread] = list(res)
+        with open(f"{path}/{n_thread}_threads_results.txt", "+w") as file:
+            file.write(dumps(results[n_thread]))
+        with open(f"{path}/{n_thread}_threads_results_formatted.txt", "+w") as file:
+            file.write(dumps(claculate_values((64, results[n_thread]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
+    return results
+
+
+def run_benchmark_worker(path):
+    results = {}
+    for n_worker in quantity:
+        print(f"running benchmark with {n_worker} worker")
+        _ = start_manager(number_workers=n_worker, number_threads=1)
+        results[n_worker] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[n_worker] = list(res)
+        with open(f"{path}/{n_worker}_worker_results.txt", "+w") as file:
+            file.write(dumps(results[n_worker]))
+        with open(f"{path}/{n_worker}_worker_results_formatted.txt", "+w") as file:
+            file.write(dumps(claculate_values((64, results[n_worker]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
+    return
+
+
+def run_benchmark_worker_threads(path):
+    results = {}
+    for n_worker, n_thread in worker_threads:
+        print(f"running benchmark with {n_worker} worker and {n_thread}")
+        _ = start_manager(number_workers=n_worker, number_threads=n_thread)
+        results[(n_worker, n_thread)] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[(n_worker, n_thread)] = list(res)
+        with open(
+            f"{path}/{n_worker}_worker_{n_thread}_threads_results.txt", "+w"
+        ) as file:
+            file.write(dumps(results[(n_worker, n_thread)]))
+        with open(
+            f"{path}/{n_worker}_worker_{n_thread}_threads_results_formatted.txt", "+w"
+        ) as file:
+            file.write(dumps(claculate_values((64, results[(n_worker, n_thread)]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
     return results
 
 
 def main():
-    path = create_folder("long_zmq")
-    _ = start_manager()
-    row_results = run_benchmark(path)
-    formatted_results = run_calculations(row_results)
-    print(formatted_results)
-    with open(f"{path}/zmq_results.txt", "+w") as file:
-        file.write(dumps(formatted_results))
-    plot_hdr_histogram(formatted_results, "zmq_hdr")
-    run(["fuser", "-k", f"{DB_MANAGER_PORT}/tcp"])
-    sleep(WSGI_INIT_TIME)
+    path = create_folder("long_zmq_50")
+    row_results_threads = run_benchmark_threads(path)
+    row_results_worker = run_benchmark_worker(path)
+    row_results_worker_threads = run_benchmark_worker_threads(path)
+    formatted_results_thread = run_calculations(row_results_threads)
+    formatted_results_worker = run_calculations(row_results_worker)
+    formatted_results_worker_threads = run_calculations(row_results_worker_threads)
+    with open(f"{path}/formatted_results_thread.txt", "+w") as file:
+        file.write(dumps(formatted_results_thread))
+    with open(f"{path}/formatted_results_worker.txt", "+w") as file:
+        file.write(dumps(formatted_results_worker))
+    with open(f"{path}/formatted_results_worker_threads.txt", "+w") as file:
+        file.write(dumps(formatted_results_worker_threads))
