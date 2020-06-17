@@ -26,7 +26,7 @@ worker_threads = [
 RUNS = 100_000
 NUMBER_CLIENTS = 64
 PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
-WSGI_INIT_TIME = 20
+WSGI_INIT_TIME = 60
 
 
 def create_folder(name):
@@ -154,7 +154,7 @@ def run_benchmark_worker(path):
             file.write(dumps(claculate_values((64, results[n_worker]))))
         run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
         sleep(WSGI_INIT_TIME)
-    return
+    return results
 
 
 def run_benchmark_worker_threads(path):
@@ -193,5 +193,12 @@ def main():
         file.write(dumps(formatted_results_thread))
     with open(f"{path}/formatted_results_worker.txt", "+w") as file:
         file.write(dumps(formatted_results_worker))
+    formatted_results_worker_threads = {
+        str(k): v for k, v in formatted_results_worker_threads.items()
+    }
     with open(f"{path}/formatted_results_worker_threads.txt", "+w") as file:
         file.write(dumps(formatted_results_worker_threads))
+
+
+if __name__ == "__main__":
+    main()  # type: ignore

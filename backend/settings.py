@@ -41,3 +41,9 @@ STORAGE_PASSWORD: str = getenv("STORAGE_PASSWORD", "root")
 
 FLASK_ENV: str = getenv("FLASK_ENV", "development")
 FLASK_DEBUG: bool = bool(getenv("FLASK_DEBUG", False))
+
+BROKER_LISTENING: str = getenv("BROKER_LISTENING", "127.0.0.1")
+BROKER_PORT: str = getenv("BROKER_PORT", "6002")
+
+WORKER_LISTING: str = getenv("WORKER_LISTING", "127.0.0.1")
+WORKER_PORT: str = getenv("WORKER_PORT", "7002")
