@@ -8,8 +8,18 @@ from time import gmtime, sleep
 from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
 
 NUMBER_CLIENTS = 64
-quantity = [1, 2, 4, 8, 16, 32, 64]
-worker_threads = [(80, 1), (2, 32), (3, 32), (4, 32), (4, 16), (3, 16)]
+quantity = [2, 4, 8, 16, 32, 64]
+worker_threads = [
+    (1, 1),
+    (80, 1),
+    (2, 32),
+    (3, 32),
+    (4, 32),
+    (4, 16),
+    (3, 16),
+    (4, 16),
+    (2, 64),
+]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/flask_metric"
 DURATION_IN_MINUTES = 60
 WSGI_INIT_TIME = 60
@@ -130,10 +140,27 @@ def start_wsgi_server_threads_and_worker(number_threads, number_worker):
     sleep(WSGI_INIT_TIME)
 
 
-def execute_wrk_on_endpoint():
+def execute_wrk_on_endpoint(number_client):
     """Background process to execute wrk."""
+    running_time = {
+        2: 50,
+        4: 30,
+        8: 15,
+        16: 15,
+        32: 15,
+        64: 15,
+        (1, 1): 90,
+        (80, 1): 15,
+        (2, 32): 15,
+        (3, 32): 15,
+        (4, 32): 15,
+        (4, 16): 15,
+        (3, 16): 15,
+        (4, 16): 15,
+        (2, 64): 15,
+    }
     return check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {BACKEND_URL}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{NUMBER_CLIENTS} -c{NUMBER_CLIENTS} -s ./benchmark_tools/report.lua -d{running_time[number_client]}m --timeout 20s {BACKEND_URL}",
         shell=True,
     ).decode("utf-8")
 
@@ -144,7 +171,7 @@ def run_benchmark_on_threaded_wsgi(path):
     for number_threads in quantity:
         print(f"Run for {number_threads} threads")
         start_wsgi_server_threads(number_threads)
-        results[number_threads] = execute_wrk_on_endpoint()
+        results[number_threads] = execute_wrk_on_endpoint(number_threads)
         with open(f"{path}/threaded_results.txt", "a+") as file:
             file.write(f"\n{number_threads} threads\n")
             file.write(results[number_threads])
@@ -159,7 +186,7 @@ def run_benchmark_on_worker_wsgi(path):
     for number_worker in quantity:
         print(f"Run for {number_worker} workers")
         start_wsgi_server_worker(number_worker)
-        results[number_worker] = execute_wrk_on_endpoint()
+        results[number_worker] = execute_wrk_on_endpoint(number_worker)
         with open(f"{path}/worker_results.txt", "a+") as file:
             file.write(f"\n{number_worker} workers\n")
             file.write(results[number_worker])
@@ -179,7 +206,7 @@ def run_benchmark_on_worker_thread_wsgi(path):
             number_threads=number_worker_thread[1],
             number_worker=number_worker_thread[0],
         )
-        results[number_worker_thread] = execute_wrk_on_endpoint()
+        results[number_worker_thread] = execute_wrk_on_endpoint(number_worker_thread)
         with open(f"{path}/worker_thread_results.txt", "a+") as file:
             file.write(
                 f"\n{number_worker_thread[0]} workers and {number_worker_thread[1]} threads\n"
