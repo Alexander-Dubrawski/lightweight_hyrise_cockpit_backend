@@ -10,6 +10,7 @@ from .broker_zmq_results import (
     latency_threads_1,
     latency_threads_50,
     latency_threads_worker_1,
+    latency_threads_worker_50,
     latency_workers_1,
     latency_workers_50,
     throughput_threads_1,
@@ -78,7 +79,6 @@ def plot_line_hdr_histogramm_w_t_detailed(data, ax, ax_table):
         (2, 32),
         (3, 32),
         (4, 16),
-        (3, 16),
         (2, 64),
     ]
     component_color = {
@@ -137,7 +137,6 @@ def plot_line_hdr_histogramm_w_t(data, ax, ax_table):
         (2, 32),
         (3, 32),
         (4, 16),
-        (3, 16),
         (2, 64),
     ]
     component_color = {
@@ -188,7 +187,6 @@ def plot_bar_w_t(data, ax, ax_table):
         (2, 32),
         (3, 32),
         (4, 16),
-        (3, 16),
         (2, 64),
     ]
     quantities_lables = [f"{quan[0]}p & {quan[1]}t" for quan in quantities]
@@ -222,7 +220,6 @@ def plot_bar_w_t_latency(data, ax, ax_table):
         (2, 32),
         (3, 32),
         (4, 16),
-        (3, 16),
         (2, 64),
     ]
     quantities_lables = [f"{quan[0]}p & {quan[1]}t" for quan in quantities]
@@ -673,6 +670,35 @@ def main():
         ax_latency_worker_table,
     )
     fig.savefig("detailed_latency_1.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(20, 10),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [10, 10]
+    hights = [7, 3]
+    spec = gridspec.GridSpec(
+        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_throughput_threads = fig.add_subplot(spec[0, 0])
+    ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
+    ax_throughput_worker = fig.add_subplot(spec[0, 1])
+    ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
+
+    plot_line_hdr_histogramm_w_t(
+        latency_threads_worker_50, ax_throughput_threads, ax_throughput_threads_table,
+    )
+    plot_bar_w_t(
+        throughput_threads_worker_50, ax_throughput_worker, ax_throughput_worker_table,
+    )
+
+    fig.savefig("broker_throughput_latency_50.pdf")
     plt.close(fig)
 
 
