@@ -18,14 +18,22 @@ from .wrk_benchmark_helper import (
 
 NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 64]
 BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-DURATION_IN_MINUTES = 60
 ENDPOINTS = ["manager_metric", "flask_metric"]
 
 
 def execute_wrk_on_endpoint(url, number_clinets):
     """Background process to execute wrk."""
+    running_time = {
+        1: 90,
+        2: 50,
+        4: 30,
+        8: 15,
+        16: 15,
+        32: 15,
+        64: 15,
+    }
     return check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{DURATION_IN_MINUTES}m --timeout 20s {url}",
+        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{running_time[number_clinets]}m --timeout 20s {url}",
         shell=True,
     ).decode("utf-8")
 
@@ -48,8 +56,8 @@ def run_wrk_sequential(enpoints, path):
 def run_benchmark():
     """Run sequential and parallel wrk benchmark on endpoints."""
     path = create_folder("wrk_benchmark")
-    start_wsgi_server(1, 1)
-    manager = start_manager()
+    start_wsgi_server(number_threads=32, number_worker=4)
+    manager = start_manager(number_workers=2, number_threads=32)
     generator = start_workload_generator()
     sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"], path)
     print_results(sequential_results, None, NUMBER_CLIENTS)

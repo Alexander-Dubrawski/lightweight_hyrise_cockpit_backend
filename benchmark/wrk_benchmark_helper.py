@@ -54,7 +54,7 @@ def start_wsgi_server(number_threads, number_worker):
     sleep(WSGI_INIT_TIME)
 
 
-def start_manager():
+def start_manager(number_workers, number_threads):
     sub_process = Popen(
         [
             "numactl",
@@ -67,6 +67,10 @@ def start_manager():
             "python",
             "-m",
             "backend.database_manager.cli",
+            "-w",
+            str(number_workers),
+            "-t",
+            str(number_threads),
         ]
     )
     sleep(WSGI_INIT_TIME)
