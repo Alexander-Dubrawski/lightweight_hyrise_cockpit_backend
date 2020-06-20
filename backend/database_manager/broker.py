@@ -77,7 +77,6 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
             # we need to unpack the last three values. This is the inner envelop
             thread_address, empty_frame, broker_address = request[:3]
             threads.append(thread_address)
-            print("ready")
             if broker_address != b"READY" and len(request) > 3:
                 # If client reply, send rest back to broker
                 (
