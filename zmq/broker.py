@@ -2,15 +2,17 @@
 # flake8: noqa
 import time
 from multiprocessing import Process
+from threading import Thread
 
 import zmq
 
 NUMBER_WORKER = 1
 
 
-def thread_routine():
+def thread_routine(url_thread):
     """Worker task, using a REQ socket to do load-balancing."""
-    socket = zmq.Context().socket(zmq.REQ)
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5009")
     # Tell broker we're ready for work
     socket.send(b"READY")
@@ -26,23 +28,25 @@ def thread_routine():
         socket.send_multipart([broker_address, b"", client_address, b"", b"OK"])
 
 
-def worker(broker_id):
-    context = zmq.Context.instance()
+def worker(broker_id, worker_id):
+    url_thread = "inproc://threads"
+    context = zmq.Context()
     broker = context.socket(zmq.ROUTER)
+    worker_id = f"WORKER_{worker_id}".encode()
     broker.setsockopt(zmq.IDENTITY, b"WORKER")
     broker.connect("tcp://127.0.0.1:5007")
     thread = context.socket(zmq.ROUTER)
     thread.bind("tcp://127.0.0.1:5009")
 
-    worker_processes = []
+    threads_obj = []
     for _ in range(NUMBER_WORKER):
-        process = Process(target=thread_routine)
-        process.start()
+        t = Thread(target=thread_routine, args=(url_thread,))
+        t.start()
+        threads_obj.append(t)
 
     poller = zmq.Poller()
     poller.register(thread, zmq.POLLIN)
     threads = []
-
     broker.send_multipart([broker_id, b"", b"READY"])
     poller.register(broker, zmq.POLLIN)
 
@@ -107,8 +111,8 @@ def main():
     backend.bind("tcp://127.0.0.1:5007")
 
     worker_processes = []
-    for _ in range(NUMBER_WORKER):
-        process = Process(target=worker, args=(b"BROKER",))
+    for i in range(NUMBER_WORKER):
+        process = Process(target=worker, args=(b"BROKER", i))
         process.start()
 
     poller = zmq.Poller()
