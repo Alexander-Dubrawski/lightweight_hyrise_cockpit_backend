@@ -6,13 +6,13 @@ from threading import Thread
 
 import zmq
 
-NUMBER_WORKER = 1
+NUMBER_WORKER = 4
 NUMBER_THREADS = 4
 
 
-def thread_routine(url_thread):
+def thread_routine(url_thread, thread_id, worker_id):
     """Worker task, using a REQ socket to do load-balancing."""
-    context = zmq.Context()
+    context = zmq.Context.instance()
     socket = context.socket(zmq.REQ)
     socket.connect(url_thread)
     # Tell broker we're ready for work
@@ -26,22 +26,29 @@ def thread_routine(url_thread):
             empty_frame,
             client_request,
         ) = socket.recv_multipart()
-        socket.send_multipart([broker_address, b"", client_address, b"", b"OK"])
+        socket.send_multipart(
+            [
+                broker_address,
+                b"",
+                client_address,
+                b"",
+                f"w{worker_id} t{thread_id}".encode(),
+            ]
+        )
 
 
 def worker(broker_id, worker_id):
-    url_thread = f"tcp://127.0.0.1:700{worker_id}"
-    context = zmq.Context()
+    context = zmq.Context.instance()
     broker = context.socket(zmq.ROUTER)
     byte_worker_id = f"WORKER_{worker_id}".encode()
     broker.setsockopt(zmq.IDENTITY, byte_worker_id)
     broker.connect("tcp://127.0.0.1:5007")
     thread = context.socket(zmq.ROUTER)
-    thread.bind(url_thread)
+    thread.bind("inproc://threads")
 
     threads_obj = []
-    for _ in range(NUMBER_THREADS):
-        t = Thread(target=thread_routine, args=(url_thread,))
+    for i in range(NUMBER_THREADS):
+        t = Thread(target=thread_routine, args=("inproc://threads", i, worker_id))
         t.start()
         threads_obj.append(t)
 
@@ -104,7 +111,7 @@ def worker(broker_id, worker_id):
 def main():
     """Load balancer main loop."""
     # Prepare context and sockets
-    context = zmq.Context.instance()
+    context = zmq.Context()
     frontend = context.socket(zmq.ROUTER)
     frontend.bind("tcp://127.0.0.1:5555")
     backend = context.socket(zmq.ROUTER)
