@@ -5,7 +5,7 @@ import numpy as np
 
 
 def claculate_latency_distribution(data):
-    percentiles = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99, 99.9, 99.99]
+    percentiles = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99, 99.9, 99.99, 99.999]
     complete_latency = []
     for element in data:
         complete_latency += element["latency"]
@@ -26,6 +26,12 @@ def get_latency_distribution(io_length, kind):
         ) as file:
             content = loads(file.read())
         results[quan] = claculate_latency_distribution(content)
+    with open(
+        f"measurements/long_zmq_{io_length}/1_worker_1_threads_results.txt", "r"
+    ) as file:
+        content = loads(file.read())
+    results[1] = claculate_latency_distribution(content)
+
     with open(f"measurements/formatted_{io_length}_{kind}_results.txt", "+w") as file:
         file.write(dumps(results))
 

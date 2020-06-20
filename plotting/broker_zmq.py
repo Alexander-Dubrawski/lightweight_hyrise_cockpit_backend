@@ -5,7 +5,9 @@ import numpy as np
 
 from .broker_zmq_results import (
     detailed_thread_latency_1,
+    detailed_thread_latency_50,
     detailed_worker_latency_1,
+    detailed_worker_latency_50,
     detailed_worker_thread_latency_50,
     latency_threads_1,
     latency_threads_50,
@@ -22,10 +24,60 @@ from .broker_zmq_results import (
 )
 
 
-def plot_line_hdr_histogramm_detailed(data, title, p_type, ax, ax_table):
-    percentiles = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99, 99.9, 99.99]
+def plot_line_hdr_histogramm_detailed_32(data, title, p_type, ax, ax_table):
+    percentiles = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99, 99.9, 99.99, 99.999]
     percentiles = [f"{per}%" for per in percentiles]
-    quantities = [2, 4, 8, 16, 32, 64, 128]
+    quantities = [32, 64, 128]
+    component_color = {
+        1: "orange",
+        2: "blue",
+        3: "darkgreen",
+        4: "firebrick",
+        8: "darkorchid",
+        16: "grey",
+        32: "darkkhaki",
+        64: "lightpink",
+        128: "red",
+    }
+    row_labels = []
+    rows = []
+    for quan in quantities:
+        row_labels.append(quan)
+        y_values = []
+        row = []
+        for percentile in percentiles:
+            y_values.append(data[str(quan)][percentile])
+            row.append(data[str(quan)][percentile])
+        rows.append(["%08.3f" % val for val in row])
+        ax.plot(
+            percentiles,
+            y_values,
+            label=f"{p_type} {quan}",
+            linewidth=4.0,
+            color=component_color[quan],
+        )
+    ax.legend(loc="upper left")
+    ax.set_ylabel("Latency (milliseconds)")
+    ax.set_xlabel("Percentile")
+    ax.set_title(f"Latency by Percentile Distribution {title}")
+    ax.grid()
+    ax_table.axis("tight")
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=percentiles,
+        loc="center",
+    )
+    table.scale(1, 3)
+    table.set_fontsize(30)
+
+
+def plot_line_hdr_histogramm_detailed(data, title, p_type, ax, ax_table):
+    percentiles = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99, 99.9, 99.99, 99.999]
+    percentiles = [f"{per}%" for per in percentiles]
+    quantities = [1, 2, 4, 8, 16, 32, 64, 128]
     component_color = {
         1: "orange",
         2: "blue",
@@ -248,6 +300,55 @@ def plot_bar_w_t_latency(data, ax, ax_table):
     table.set_fontsize(30)
 
 
+def plot_line_hdr_histogramm_50_16(data, title, p_type, ax, ax_table):
+    percentiles = ["1%", "50%", "99%", "99.9%", "99.99%"]
+    quantities = [2, 4, 8, 16]
+    component_color = {
+        1: "orange",
+        2: "blue",
+        3: "darkgreen",
+        4: "firebrick",
+        8: "darkorchid",
+        16: "grey",
+        32: "darkkhaki",
+        64: "lightpink",
+        128: "red",
+    }
+    row_labels = []
+    rows = []
+    for quan in quantities:
+        row_labels.append(quan)
+        y_values = []
+        row = []
+        for percentile in percentiles:
+            y_values.append(data[quan][percentile])
+            row.append(data[quan][percentile])
+        rows.append(["%08.3f" % val for val in row])
+        ax.plot(
+            percentiles,
+            y_values,
+            label=f"{p_type} {quan}",
+            linewidth=4.0,
+            color=component_color[quan],
+        )
+    ax.legend(loc="upper left")
+    ax.set_ylabel("Latency (milliseconds)")
+    ax.set_xlabel("Percentile")
+    ax.set_title(f"Latency by Percentile Distribution {title}")
+    ax.grid()
+    ax_table.axis("tight")
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=percentiles,
+        loc="center",
+    )
+    table.scale(1, 3)
+    table.set_fontsize(30)
+
+
 def plot_line_hdr_histogramm(data, title, p_type, ax, ax_table):
     percentiles = ["1%", "50%", "99%", "99.9%", "99.99%"]
     quantities = [1, 2, 4, 8, 16, 32, 64, 128]
@@ -416,14 +517,14 @@ def main():
     ax_latency_worker = fig.add_subplot(spec[0, 1])
     ax_latency_worker_table = fig.add_subplot(spec[1, 1])
 
-    plot_line_hdr_histogramm(
+    plot_line_hdr_histogramm_50_16(
         latency_threads_50,
         "threads (I/O 50ms)",
         "threads",
         ax_latency_threads,
         ax_latency_threads_table,
     )
-    plot_line_hdr_histogramm(
+    plot_line_hdr_histogramm_50_16(
         latency_workers_50,
         "processes (I/O 50ms)",
         "processes",
@@ -437,14 +538,14 @@ def main():
     plt.rcParams.update({"font.size": 20})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(12, 6),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10, 10]
-    hights = [7, 3]
+    widths = [6, 6]
+    hights = [5, 1]
     spec = gridspec.GridSpec(
         ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
@@ -699,6 +800,41 @@ def main():
     )
 
     fig.savefig("broker_throughput_latency_50.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(28, 28),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [28]
+    hights = [8, 6, 8, 6]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=4, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_latency_thread = fig.add_subplot(spec[0, 0])
+    ax_latency_thread_table = fig.add_subplot(spec[1, 0])
+    ax_latency_worker = fig.add_subplot(spec[2, 0])
+    ax_latency_worker_table = fig.add_subplot(spec[3, 0])
+    plot_line_hdr_histogramm_detailed_32(
+        detailed_thread_latency_50,
+        "threads (I/O 50ms)",
+        "threads",
+        ax_latency_thread,
+        ax_latency_thread_table,
+    )
+    plot_line_hdr_histogramm_detailed_32(
+        detailed_worker_latency_50,
+        "processes (I/O 50ms)",
+        "processes",
+        ax_latency_worker,
+        ax_latency_worker_table,
+    )
+    fig.savefig("detailed_latency_50_32_128.pdf")
     plt.close(fig)
 
 

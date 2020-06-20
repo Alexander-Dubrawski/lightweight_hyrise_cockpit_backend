@@ -1,5 +1,6 @@
 # type: ignore
 from datetime import timedelta
+from statistics import median
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -130,6 +131,32 @@ def plot_bar(data, ax, ax_table):
     table.scale(1, 2)
 
 
+def plot_bar_cpu(date, ax, ax_table, component):
+    number_dbs = [1, 10, 20, 40]
+    values = []
+    for number_db in number_dbs:
+        values.append(median(date[number_db][component]["usage"]))
+    ind = np.arange(len(number_dbs))
+    width = 0.60
+    ax.bar(ind, values, width, label="avg CPU usage")
+    ax.legend()
+    ax.set_ylabel("CPU usage in %")
+    ax.set_xlabel("Database obj")
+    ax.set_title("AVG CPU usage in %")
+    ax.set_xticks(ind)
+    ax.set_xticklabels(number_dbs)
+    ax_table.axis("tight")
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=[[str(val) for val in values]],
+        rowLabels=["AVG"],
+        cellLoc="center",
+        colLabels=number_dbs,
+        loc="center",
+    )
+    table.scale(1, 2)
+
+
 def main():
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
@@ -209,6 +236,26 @@ def main():
         plot_cpu_usage(cpu_usage[n_db], ax_manager, "manager", n_db)
         # plot_cpu_usage(cpu_usage[n_db], ax_wsgi, "back_end", n_db)
     fig.savefig("user_scenario_cpu.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(20, 10),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [20]
+    hights = [7, 3]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_usage = fig.add_subplot(spec[0, 0])
+    ax_usage_table = fig.add_subplot(spec[1, 0])
+    plot_bar_cpu(cpu_usage, ax_usage, ax_usage_table, "manager")
+    fig.savefig("bar_cpu_usage.pdf")
     plt.close(fig)
 
 
