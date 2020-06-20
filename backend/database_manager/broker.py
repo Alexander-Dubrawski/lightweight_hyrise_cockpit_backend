@@ -55,7 +55,6 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
     broker.connect(url_broker)
     thread = context.socket(ROUTER)
     thread.bind("inproc://threads")
-    sleep(5)
 
     threads_obj = []
     for i in range(number_threads):
@@ -78,10 +77,7 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
             # we need to unpack the last three values. This is the inner envelop
             thread_address, empty_frame, broker_address = request[:3]
             threads.append(thread_address)
-            if init and len(threads) == number_threads:
-                init = False
-                broker.send_multipart([broker_id, b"", b"READY"])
-
+            print("ready")
             if broker_address != b"READY" and len(request) > 3:
                 # If client reply, send rest back to broker
                 (
@@ -108,8 +104,6 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
                 client_request,
             ) = message
             thread_address = threads.pop(0)
-            if threads:
-                broker.send_multipart([broker_id, b"", b"READY"])
             thread.send_multipart(
                 [
                     thread_address,
@@ -218,11 +212,13 @@ class Broker:
             )
             worker.start()
             workers.append(worker)
+            for _ in range(number_threads):
+                self._worker_addresses.append(f"WORKER_{i}".encode())
         return workers
 
     def run(self) -> None:
         """Start the server loop."""
-
+        self._poller.register(self._client, POLLIN)
         while True:
             socks = dict(self._poller.poll())
 
@@ -233,10 +229,8 @@ class Broker:
                     # Poll for clients now that a worker is available
                     self._poller.register(self._client, POLLIN)
                 self._worker_addresses.append(worker_address)
-                if client_adress != b"READY" and len(request) > 3:
-                    # If client reply, send rest back to front end
-                    empty_frame, cleint_reply = request[3:]
-                    self._client.send_multipart([client_adress, b"", cleint_reply])
+                empty_frame, cleint_reply = request[3:]
+                self._client.send_multipart([client_adress, b"", cleint_reply])
 
             if socks.get(self._client) == POLLIN:
                 multi_part_message = self._client.recv_multipart()
