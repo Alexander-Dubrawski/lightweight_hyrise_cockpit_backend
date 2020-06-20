@@ -7,13 +7,14 @@ from threading import Thread
 import zmq
 
 NUMBER_WORKER = 1
+NUMBER_THREADS = 4
 
 
 def thread_routine(url_thread):
     """Worker task, using a REQ socket to do load-balancing."""
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
-    socket.connect("tcp://127.0.0.1:5009")
+    socket.connect(url_thread)
     # Tell broker we're ready for work
     socket.send(b"READY")
 
@@ -29,17 +30,17 @@ def thread_routine(url_thread):
 
 
 def worker(broker_id, worker_id):
-    url_thread = "inproc://threads"
+    url_thread = f"tcp://127.0.0.1:700{worker_id}"
     context = zmq.Context()
     broker = context.socket(zmq.ROUTER)
-    worker_id = f"WORKER_{worker_id}".encode()
-    broker.setsockopt(zmq.IDENTITY, b"WORKER")
+    byte_worker_id = f"WORKER_{worker_id}".encode()
+    broker.setsockopt(zmq.IDENTITY, byte_worker_id)
     broker.connect("tcp://127.0.0.1:5007")
     thread = context.socket(zmq.ROUTER)
-    thread.bind("tcp://127.0.0.1:5009")
+    thread.bind(url_thread)
 
     threads_obj = []
-    for _ in range(NUMBER_WORKER):
+    for _ in range(NUMBER_THREADS):
         t = Thread(target=thread_routine, args=(url_thread,))
         t.start()
         threads_obj.append(t)

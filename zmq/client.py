@@ -8,7 +8,7 @@ socket = context.socket(zmq.REQ)
 socket.connect("tcp://127.0.0.1:5555")
 
 #  Do 10 requests, waiting each time for a response
-for request in range(10):
+for request in range(100):
     socket.send(b"Hello")
 
     #  Get the reply.
