@@ -1,3 +1,4 @@
+# flake8: noqa
 from json import dumps, loads
 from multiprocessing import Process
 from threading import Thread
@@ -201,7 +202,7 @@ class Broker:
         )
         self._worker_addresses: List = []
         self._poller = Poller()
-        self._poller.register(self._client, POLLIN)
+        # self._poller.register(self._client, POLLIN)
         self._poller.register(self._worker, POLLIN)
         self._poller.register(self._database_manager, POLLIN)
 
@@ -224,6 +225,9 @@ class Broker:
             if self._worker in socks:
                 request = self._worker.recv_multipart()
                 worker_address, empty_frame, client_adress = request[:3]
+                if not self._worker_addresses:
+                    # Poll for clients now that a worker is available
+                    self._poller.register(self._client, POLLIN)
                 self._worker_addresses.append(worker_address)
                 if client_adress != b"READY" and len(request) > 3:
                     # If client reply, send rest back to front end
@@ -242,6 +246,9 @@ class Broker:
                     self._worker.send_multipart(
                         [worker_address, b"", client_adress, b"", client_request]
                     )
+                    if not self._worker_addresses:
+                        # Don't poll clients if no workers are available
+                        self._poller.unregister(self._client)
 
             if socks.get(self._database_manager) == POLLIN:
                 message = self._database_manager.recv_multipart()
