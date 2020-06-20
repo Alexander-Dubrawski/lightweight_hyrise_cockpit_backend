@@ -66,7 +66,7 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
     poller = Poller()
     poller.register(thread, POLLIN)
     threads = []
-    broker.send_multipart([broker_id, b"", b"READY"])
+    init = True
     poller.register(broker, POLLIN)
 
     while True:
@@ -78,6 +78,10 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
             # we need to unpack the last three values. This is the inner envelop
             thread_address, empty_frame, broker_address = request[:3]
             threads.append(thread_address)
+            if init and len(threads) == number_threads:
+                init = False
+                broker.send_multipart([broker_id, b"", b"READY"])
+
             if broker_address != b"READY" and len(request) > 3:
                 # If client reply, send rest back to broker
                 (
