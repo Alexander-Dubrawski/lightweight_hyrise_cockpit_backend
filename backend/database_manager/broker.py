@@ -88,7 +88,7 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
                     empty_frame,
                     cleint_reply,
                 ) = request
-                if worker_id == 32:
+                if worker_id == 15:
                     sleep(0.05)
                 broker.send_multipart(
                     [broker_address, b"", client_address, b"", cleint_reply]
