@@ -14,7 +14,7 @@ from zmq import DEALER, IDENTITY, POLLIN, REQ, ROUTER, Context, Poller
 
 def _call_metric(body: Body) -> Response:
     # do some work
-    sleep(0.05)
+    sleep(0.001)
     response = get_response(200)
     return response
 
@@ -88,6 +88,8 @@ def worker_proxy(broker_id, number_threads, worker_id, url_broker):
                     empty_frame,
                     cleint_reply,
                 ) = request
+                if worker_id == 32:
+                    sleep(0.05)
                 broker.send_multipart(
                     [broker_address, b"", client_address, b"", cleint_reply]
                 )
