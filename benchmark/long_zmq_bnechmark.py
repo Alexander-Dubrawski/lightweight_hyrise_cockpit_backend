@@ -23,7 +23,7 @@ worker_threads = [
     (4, 16),
     (2, 64),
 ]
-RUNS = 10_000_000
+RUNS = 12_800_000
 NUMBER_CLIENTS = 64
 PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99, 99.999, 99.9999]
 WSGI_INIT_TIME = 60
