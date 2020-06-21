@@ -5,16 +5,15 @@ from time import sleep
 from types import TracebackType
 from typing import List, Optional, Type
 
-from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller, proxy
-
 from backend.database_manager.manager import DatabaseManager
 from backend.request import Body, Request
 from backend.response import Response, get_response
+from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller, proxy
 
 
 def _call_metric(body: Body) -> Response:
     # do some work
-    sleep(0.05)
+    sleep(0.001)
     response = get_response(200)
     return response
 

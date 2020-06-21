@@ -8,10 +8,10 @@ from subprocess import Popen, run
 from time import gmtime, sleep, time_ns
 
 import numpy as np
-from zmq import REQ, Context
 
 from backend.request import Header, Request
 from backend.settings import BROKER_LISTENING, BROKER_PORT
+from zmq import REQ, Context
 
 quantity = [2, 4, 8, 16, 32, 64, 128]
 worker_threads = [
@@ -23,9 +23,9 @@ worker_threads = [
     (4, 16),
     (2, 64),
 ]
-RUNS = 100_000
+RUNS = 10_000_000
 NUMBER_CLIENTS = 64
-PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99]
+PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99, 99.999, 99.9999]
 WSGI_INIT_TIME = 60
 
 
@@ -182,22 +182,11 @@ def run_benchmark_worker_threads(path):
 
 
 def main():
-    path = create_folder("long_zmq_50")
-    row_results_threads = run_benchmark_threads(path)
+    path = create_folder("detailed_latency_zmq")
     row_results_worker = run_benchmark_worker(path)
-    row_results_worker_threads = run_benchmark_worker_threads(path)
-    formatted_results_thread = run_calculations(row_results_threads)
     formatted_results_worker = run_calculations(row_results_worker)
-    formatted_results_worker_threads = run_calculations(row_results_worker_threads)
-    with open(f"{path}/formatted_results_thread.txt", "+w") as file:
-        file.write(dumps(formatted_results_thread))
     with open(f"{path}/formatted_results_worker.txt", "+w") as file:
         file.write(dumps(formatted_results_worker))
-    formatted_results_worker_threads = {
-        str(k): v for k, v in formatted_results_worker_threads.items()
-    }
-    with open(f"{path}/formatted_results_worker_threads.txt", "+w") as file:
-        file.write(dumps(formatted_results_worker_threads))
 
 
 if __name__ == "__main__":
