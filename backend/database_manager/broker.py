@@ -5,21 +5,20 @@ from time import sleep
 from types import TracebackType
 from typing import List, Optional, Type
 
-from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller, proxy
-
 from backend.database_manager.manager import DatabaseManager
 from backend.request import Body, Request
 from backend.response import Response, get_response
+from zmq import DEALER, POLLIN, REP, ROUTER, Context, Poller, proxy
 
 
 def _call_metric(body: Body) -> Response:
     # do some work
-    sleep(0.05)
+    sleep(0.001)
     response = get_response(200)
     return response
 
 
-def worker_thread(url_thread, context=None):
+def worker_thread(url_thread, worker_id, context=None):
     server_calls = {
         "get metric": _call_metric,
     }
@@ -31,10 +30,12 @@ def worker_thread(url_thread, context=None):
         request = socket.recv_json()
         call = request["header"]["message"]
         func = server_calls[call]
+        if worker_id == 15:
+            sleep(0.05)
         socket.send_json(func(request["body"]))
 
 
-def worker_proxy(number_threads, url_broker):
+def worker_proxy(number_threads, url_broker, worker_id):
     url_thread = "inproc://threads"
     context = Context.instance()
     broker = context.socket(ROUTER)
@@ -43,7 +44,7 @@ def worker_proxy(number_threads, url_broker):
     threads.bind(url_thread)
 
     for i in range(number_threads):
-        thread = Thread(target=worker_thread, args=(url_thread,))
+        thread = Thread(target=worker_thread, args=(url_thread, worker_id,))
         thread.start()
 
     proxy(broker, threads)
@@ -138,7 +139,7 @@ class Broker:
     def _start_worker(self, number_worker, number_threads, url_broker) -> List:
         workers = []
         for i in range(number_worker):
-            worker = Process(target=worker_proxy, args=(number_threads, url_broker,))
+            worker = Process(target=worker_proxy, args=(number_threads, url_broker, i,))
             worker.start()
             workers.append(worker)
         return workers
