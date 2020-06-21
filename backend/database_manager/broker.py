@@ -14,7 +14,7 @@ from zmq import DEALER, IDENTITY, POLLIN, REQ, ROUTER, Context, Poller
 
 def _call_metric(body: Body) -> Response:
     # do some work
-    sleep(0.05)
+    sleep(0.001)
     response = get_response(200)
     return response
 
