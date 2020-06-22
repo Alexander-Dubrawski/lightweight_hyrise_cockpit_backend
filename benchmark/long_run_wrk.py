@@ -1,85 +1,193 @@
-"""Tool for executing wrk benchmark."""
-import signal
+from calendar import timegm
+from concurrent import futures
+from datetime import datetime
 from json import dumps
-from subprocess import check_output
+from os import mkdir
+from statistics import mean, median, pstdev
+from subprocess import Popen, run
+from time import gmtime, sleep, time_ns
 
-from benchmark_tools.settings import BACKEND_HOST, BACKEND_PORT
+import numpy as np
 
-from .wrk_benchmark_helper import (
-    create_folder,
-    format_results,
-    plot_charts,
-    print_results,
-    start_manager,
-    start_workload_generator,
-    start_wsgi_server,
-    stop_wsgi_server,
-)
+from backend.request import Header, Request
+from backend.settings import BROKER_LISTENING, BROKER_PORT
+from zmq import REQ, Context
 
-NUMBER_CLIENTS = [1, 2, 4, 8, 16, 32, 64]
-BACKEND_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}"
-ENDPOINTS = ["manager_metric", "flask_metric"]
-
-
-def execute_wrk_on_endpoint(url, number_clinets):
-    """Background process to execute wrk."""
-    running_time = {
-        1: 90,
-        2: 50,
-        4: 30,
-        8: 15,
-        16: 15,
-        32: 15,
-        64: 15,
-    }
-    return check_output(
-        f"numactl -m 0 --physcpubind 20-79 wrk -t{number_clinets} -c{number_clinets} -s ./benchmark_tools/report.lua -d{running_time[number_clinets]}m --timeout 20s {url}",
-        shell=True,
-    ).decode("utf-8")
+quantity = [32]
+worker_threads = [
+    (1, 1),
+    (2, 32),
+    (3, 32),
+    (4, 16),
+    (3, 16),
+    (4, 16),
+    (2, 64),
+]
+RUNS = 6_400_000
+NUMBER_CLIENTS = 64
+PERCENTILES = [1, 25, 50, 75, 90, 99, 99.9, 99.99, 99.999]
+WSGI_INIT_TIME = 60
 
 
-def run_wrk_sequential(enpoints, path):
-    """Run wrk sequential on all endpoints."""
-    sequential_results = {}
-    for number_client in NUMBER_CLIENTS:
-        sequential_results[number_client] = {}
-        for endpoint in enpoints:
-            print(f"Run on {endpoint} with {number_client} clients")
-            sequential_results[number_client][endpoint] = execute_wrk_on_endpoint(
-                f"{BACKEND_URL}/{endpoint}", number_client
-            )
-            with open(f"{path}/{number_client}_{endpoint}_results.txt", "w+") as file:
-                file.write(sequential_results[number_client][endpoint])
-    return sequential_results
+def create_folder(name):
+    """Create folder to save benchmark results."""
+    ts = timegm(gmtime())
+    path = f"measurements/{name}_{datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')}"
+    mkdir(path)
+    return path
 
 
-def run_benchmark():
-    """Run sequential and parallel wrk benchmark on endpoints."""
-    path = create_folder("wrk_benchmark")
-    start_wsgi_server(number_threads=32, number_worker=4)
-    manager = start_manager(number_workers=2, number_threads=32)
-    generator = start_workload_generator()
-    sequential_results = run_wrk_sequential(["manager_metric", "flask_metric"], path)
-    print_results(sequential_results, None, NUMBER_CLIENTS)
-    formatted_sequential_results = format_results(sequential_results)
-
-    with open(f"{path}/formatted_sequential_results.txt", "+w") as file:
-        file.write(dumps(formatted_sequential_results))
-
-    plot_charts(
-        formatted_sequential_results,
-        path,
-        ("manager_metric", "flask_metric"),
-        "theoretical_sequential",
-        "client",
+def start_manager(number_workers, number_threads):
+    sub_process = Popen(
+        [
+            "numactl",
+            "-m",
+            "0",
+            "--physcpubind",
+            "0-19",
+            "pipenv",
+            "run",
+            "python",
+            "-m",
+            "backend.database_manager.cli",
+            "-w",
+            str(number_workers),
+            "-t",
+            str(number_threads),
+        ]
     )
+    sleep(WSGI_INIT_TIME)
+    return sub_process
 
-    stop_wsgi_server()
-    manager.send_signal(signal.SIGINT)
-    manager.wait()
-    generator.send_signal(signal.SIGINT)
-    generator.wait()
+
+def run_clinet(runs):
+    context = Context()
+    socket = context.socket(REQ)
+    socket.connect(f"tcp://{BROKER_LISTENING}:{BROKER_PORT}")
+    latency = []
+    start_benchmark = time_ns()
+    for _ in range(runs):
+        start_ts = time_ns()
+        socket.send_json(Request(header=Header(message="get metric"), body={}))
+        _ = socket.recv_json()
+        end_ts = time_ns()
+        latency.append(end_ts - start_ts)
+    end_benchmark = time_ns()
+    return {
+        "latency": latency,
+        "run_time": (end_benchmark - start_benchmark),
+        "runs": runs,
+    }
+
+
+def claculate_values(args):
+    number_clinets, data = args
+    complete_latency = []
+    complete_runtime = 0
+    for element in data:
+        complete_latency += element["latency"]
+        complete_runtime += element["run_time"] / RUNS
+    avg_latency = mean(complete_latency)
+    median_latency = median(complete_latency)
+    stdev_latency = pstdev(complete_latency)
+    num = np.array(complete_latency)
+    percentiles_values = [np.percentile(num, percentile) for percentile in PERCENTILES]
+    return {
+        number_clinets: {
+            "Avg": round(avg_latency / 1_000_000, 3),
+            "Median": round(median_latency / 1_000_000, 3),
+            "Stdev": round(stdev_latency / 1_000_000, 3),
+            "latency distribution": [
+                round(val / 1_000_000, 3) for val in percentiles_values
+            ],
+            "throughput": 1 / (complete_runtime / 1_000_000_000),
+        }
+    }
+
+
+def run_calculations(data):
+    arguments = [(key, value) for key, value in data.items()]
+    worker = len(arguments)
+    with futures.ProcessPoolExecutor(worker) as executor:
+        res = executor.map(claculate_values, arguments)
+    results = list(res)
+    combined_res = {}
+    for result in results:
+        combined_res.update(result)
+    return combined_res
+
+
+def run_benchmark_threads(path):
+    results = {}
+    for n_thread in quantity:
+        print(f"running benchmark with {n_thread} threads")
+        _ = start_manager(number_workers=1, number_threads=n_thread)
+        results[n_thread] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[n_thread] = list(res)
+        with open(f"{path}/{n_thread}_threads_results.txt", "+w") as file:
+            file.write(dumps(results[n_thread]))
+        with open(f"{path}/{n_thread}_threads_results_formatted.txt", "+w") as file:
+            file.write(dumps(claculate_values((64, results[n_thread]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
+    return results
+
+
+def run_benchmark_worker(path):
+    results = {}
+    for n_worker in quantity:
+        print(f"running benchmark with {n_worker} worker")
+        _ = start_manager(number_workers=n_worker, number_threads=1)
+        results[n_worker] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[n_worker] = list(res)
+        with open(f"{path}/{n_worker}_worker_results.txt", "+w") as file:
+            file.write(dumps(results[n_worker]))
+        with open(f"{path}/{n_worker}_worker_results_formatted.txt", "+w") as file:
+            file.write(dumps(claculate_values((64, results[n_worker]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
+    return results
+
+
+def run_benchmark_worker_threads(path):
+    results = {}
+    for n_worker, n_thread in worker_threads:
+        print(f"running benchmark with {n_worker} worker and {n_thread}")
+        _ = start_manager(number_workers=n_worker, number_threads=n_thread)
+        results[(n_worker, n_thread)] = {}
+        worker = NUMBER_CLIENTS
+        arguments = [int(RUNS / NUMBER_CLIENTS) for _ in range(NUMBER_CLIENTS)]
+        with futures.ProcessPoolExecutor(worker) as executor:
+            res = executor.map(run_clinet, arguments)
+        results[(n_worker, n_thread)] = list(res)
+        with open(
+            f"{path}/{n_worker}_worker_{n_thread}_threads_results.txt", "+w"
+        ) as file:
+            file.write(dumps(results[(n_worker, n_thread)]))
+        with open(
+            f"{path}/{n_worker}_worker_{n_thread}_threads_results_formatted.txt", "+w"
+        ) as file:
+            file.write(dumps(claculate_values((64, results[(n_worker, n_thread)]))))
+        run(["fuser", "-k", f"{BROKER_PORT}/tcp"])
+        sleep(WSGI_INIT_TIME)
+    return results
+
+
+def main():
+    path = create_folder("detailed_latency_zmq_50_no_balance")
+    row_results_worker = run_benchmark_worker(path)
+    formatted_results_worker = run_calculations(row_results_worker)
+    with open(f"{path}/formatted_results_worker.txt", "+w") as file:
+        file.write(dumps(formatted_results_worker))
 
 
 if __name__ == "__main__":
-    run_benchmark()  # type: ignore
+    main()  # type: ignore
