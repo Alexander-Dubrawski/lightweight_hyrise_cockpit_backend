@@ -46,44 +46,45 @@ def get_total_latency(number, io_length, kind):
     return content
 
 
-def plot_lines_clients(data, ax, s_range, e_range):
-    for i in range(s_range, e_range, 4):
-        values_smoothed_one = gaussian_filter1d(data[i]["latency"], sigma=150.0)
-        values_smoothed_one = [round(val / 1_000_000, 3) for val in values_smoothed_one]
-        values_smoothed_two = gaussian_filter1d(data[i + 1]["latency"], sigma=150.0)
-        values_smoothed_two = [round(val / 1_000_000, 3) for val in values_smoothed_two]
-        values_smoothed_three = gaussian_filter1d(data[i + 2]["latency"], sigma=150.0)
-        values_smoothed_three = [
-            round(val / 1_000_000, 3) for val in values_smoothed_three
-        ]
-        values_smoothed_four = gaussian_filter1d(data[i + 3]["latency"], sigma=150.0)
-        values_smoothed_four = [
-            round(val / 1_000_000, 3) for val in values_smoothed_four
-        ]
-        avg_values = []
-        for z in range(len(values_smoothed_four)):
-            avg_values.append(
-                (
-                    values_smoothed_one[z]
-                    + values_smoothed_two[z]
-                    + values_smoothed_three[z]
-                    + values_smoothed_four[z]
-                )
-                / 4
-            )
-        ax.plot(
-            avg_values, label=f"avg clients {i} to {i+3}", linewidth=4.0,
+def get_avg_clients(data, index, number_clients, sigma):
+    values_smoothed = []
+    for i in range(number_clients):
+        values_smoothed.append(
+            [
+                round(val / 1_000_000, 3)
+                for val in gaussian_filter1d(data[index + i]["latency"], sigma=sigma)
+            ]
         )
-    ax.legend(loc="upper left")
+    avg_values = []
+    for i in range(len(values_smoothed[0])):
+        avg_value = 0
+        for z in values_smoothed:
+            avg_value += z[i]
+        avg_values.append(avg_value / number_clients)
+    return avg_values
+
+
+def plot_lines_clients(data, ax, s_range, e_range, number_clients, sigma):
+    for i in range(s_range, e_range, number_clients):
+        avg_values = get_avg_clients(data, i, number_clients, sigma)
+        ax.plot(
+            avg_values, label=f"avg clients {i} to {i+number_clients}", linewidth=4.0,
+        )
+    ax.legend(loc="lower left")
     ax.set_ylabel("Latency (milliseconds)")
     ax.set_xlabel("query")
 
 
 def plot_line_total(data, title, ax_1, ax_2, ax_3, ax_4):
-    plot_lines_clients(data, ax_1, 0, 16)
-    plot_lines_clients(data, ax_2, 16, 32)
-    plot_lines_clients(data, ax_3, 32, 48)
-    plot_lines_clients(data, ax_4, 48, 64)
+    plot_lines_clients(data, ax_1, 0, 16, 4, 1500)
+    plot_lines_clients(data, ax_2, 16, 32, 4, 1500)
+    plot_lines_clients(data, ax_3, 32, 48, 4, 1500)
+    plot_lines_clients(data, ax_4, 48, 64, 4, 1500)
+
+
+def plot_line_total_split(data, title, ax_1, ax_2):
+    plot_lines_clients(data, ax_1, 0, 32, 8, 750)
+    plot_lines_clients(data, ax_2, 32, 64, 8, 750)
 
 
 def plot_line(data, title, ax):
@@ -131,6 +132,7 @@ def main():
     fig.savefig("2_worker_1_latency.pdf")
     plt.close(fig)
 
+    print("Plotting total_2_worker_1_latency")
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
         num=None,
@@ -178,6 +180,8 @@ def main():
     ax_top_right = fig.add_subplot(spec[0, 1])
     ax_down_left = fig.add_subplot(spec[1, 0])
     ax_down_right = fig.add_subplot(spec[1, 1])
+    print("total_128_worker_1_latency.pdf")
+
     plot_line_total(
         get_total_latency(128, 1, "worker"),
         "128 processes",
@@ -187,6 +191,30 @@ def main():
         ax_down_right,
     )
     fig.savefig("total_128_worker_1_latency.pdf")
+    plt.close(fig)
+
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(40, 20),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [40]
+    hights = [10, 10]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+
+    print("Plotting split_total_2_worker_1_latency.pdf")
+    ax_top_left = fig.add_subplot(spec[0, 0])
+    ax_down_left = fig.add_subplot(spec[1, 0])
+    plot_line_total_split(
+        get_total_latency(2, 1, "worker"), "2 processes", ax_top_left, ax_down_left,
+    )
+    fig.savefig("split_total_2_worker_1_latency.pdf")
     plt.close(fig)
 
 
