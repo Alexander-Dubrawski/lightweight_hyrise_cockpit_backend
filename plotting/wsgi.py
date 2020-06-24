@@ -1,4 +1,5 @@
 # type: ignore
+# flake8: noqa
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,35 +18,46 @@ from .wsgi_results import (
 )
 
 
-def plot_bar_latency(data, title, p_type, ax, ax_table):
+def autolabel(rects, ax):
+    """Attach a text label above each bar in *rects*, displaying its height."""
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate(
+            "{}".format(height),
+            xy=(rect.get_x() + rect.get_width() / 2, height),
+            xytext=(0, 0),  # 3 points vertical offset
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+        )
+
+
+def plot_bar_latency(data, title, p_type, ax):
     quantities = [1, 2, 4, 8, 16, 32, 64]
     values = []
+    max_value = 0
     for quan in quantities:
         values.append(data[quan]["50%"])
+        if max_value < data[quan]["50%"]:
+            max_value = data[quan]["50%"]
     ind = np.arange(len(quantities))
     width = 0.60
-    if p_type == "threads":
-        color = "orange"
+    if p_type == "Threads":
+        color = "darkorange"
     else:
-        color = "blue"
-    ax.bar(ind, values, width, label="avg latency", color=color)
+        color = "steelblue"
+    bar_chart = ax.bar(ind, values, width, label="", color=color)
+    autolabel(bar_chart, ax)
     ax.legend()
-    ax.set_ylabel("Latency (milliseconds)")
+    legend = ax.legend()
+    legend.remove()
+    ax.set_ylabel("Latenz (Millisekunden)")
     ax.set_xlabel(p_type)
     ax.set_title(title)
     ax.set_xticks(ind)
     ax.set_xticklabels(quantities)
-    ax_table.axis("tight")
-    ax_table.axis("off")
-    table = ax_table.table(
-        cellText=[["%06.2f" % val for val in values]],
-        rowLabels=["AVG"],
-        cellLoc="center",
-        colLabels=quantities,
-        loc="center",
-    )
-    table.scale(1, 2)
-    table.set_fontsize(30)
+    y_max = (max_value / 100) * 10
+    ax.axis(ymin=0, ymax=(y_max + max_value))
 
 
 def plot_line_hdr_histogramm_w_t(data, ax, ax_table):
@@ -182,10 +194,10 @@ def plot_line_hdr_histogramm(data, title, p_type, ax, ax_table):
             linewidth=4.0,
             color=component_color[quan],
         )
-    ax.legend(loc="upper left")
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("Percentile")
-    ax.set_title(f"Latency by Percentile Distribution {title}")
+    ax.legend(loc="upper left", prop={"size": 15})
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Perzentil")
+    ax.set_title(f"Latenz nach Perzentilverteilung {title}")
     ax.grid()
     ax_table.axis("tight")
     ax_table.axis("off")
@@ -200,35 +212,91 @@ def plot_line_hdr_histogramm(data, title, p_type, ax, ax_table):
     table.set_fontsize(30)
 
 
-def plot_bar(data, title, p_type, ax, ax_table):
+def plot_line_hdr_histogramm_cut(data, title, p_type, ax, ax_table):
+    percentiles = ["1%", "50%", "99%", "99.9%", "99.99%"]
+    quantities = [1, 2, 4, 8, 16, 32, 64]
+    component_color = {
+        1: "orange",
+        2: "blue",
+        3: "darkgreen",
+        4: "firebrick",
+        8: "darkorchid",
+        16: "grey",
+        32: "darkkhaki",
+        64: "lightpink",
+    }
+    row_labels = []
+    rows = []
+    for quan in quantities:
+        row_labels.append(quan)
+        y_values = []
+        row = []
+        for percentile in percentiles:
+            y_values.append(data[quan][percentile])
+            row.append(data[quan][percentile])
+        rows.append(["%08.3f" % val for val in row])
+        ax.plot(
+            percentiles,
+            y_values,
+            label=f"{p_type} {quan}",
+            linewidth=4.0,
+            color=component_color[quan],
+        )
+    ax.legend(loc="upper left", prop={"size": 15})
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Perzentil")
+    ax.set_title(f"Latenz nach Perzentilverteilung {title}")
+    ax.grid()
+    ax.axis(ymin=0, ymax=(2700))
+    ax_table.axis("tight")
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=percentiles,
+        loc="center",
+    )
+    table.scale(1, 3)
+    table.set_fontsize(30)
+
+
+def plot_bar(data, title, p_type, ax):
     quantities = [1, 2, 4, 8, 16, 32, 64]
     values = []
+    max_value = 0
     for quan in quantities:
         values.append(data[quan])
+        if max_value < data[quan]:
+            max_value = data[quan]
     ind = np.arange(len(quantities))
     width = 0.60
-    if p_type == "threads":
-        color = "orange"
+    if p_type == "Threads":
+        color = "darkorange"
     else:
-        color = "blue"
-    ax.bar(ind, values, width, label="req/sec", color=color)
-    ax.legend()
-    ax.set_ylabel("req/sec")
+        color = "steelblue"
+    bar_chart = ax.bar(ind, values, width, label="Anfragen / Sek.", color=color)
+    autolabel(bar_chart, ax)
+    legend = ax.legend()
+    legend.remove()
+    ax.set_ylabel("Anfragen / Sek.")
     ax.set_xlabel(p_type)
     ax.set_title(title)
     ax.set_xticks(ind)
     ax.set_xticklabels(quantities)
-    ax_table.axis("tight")
-    ax_table.axis("off")
-    table = ax_table.table(
-        cellText=[["%06.2f" % val for val in values]],
-        rowLabels=["AVG"],
-        cellLoc="center",
-        colLabels=quantities,
-        loc="center",
-    )
-    table.scale(1, 2)
-    table.set_fontsize(30)
+    y_max = (max_value / 100) * 10
+    ax.axis(ymin=0, ymax=(y_max + max_value))
+    # ax_table.axis("tight")
+    # ax_table.axis("off")
+    # table = ax_table.table(
+    #     cellText=[["%06.2f" % val for val in values]],
+    #     rowLabels=["AVG"],
+    #     cellLoc="center",
+    #     colLabels=quantities,
+    #     loc="center",
+    # )
+    # table.scale(1, 2)
+    # table.set_fontsize(30)
 
 
 def main():
@@ -253,15 +321,15 @@ def main():
 
     plot_line_hdr_histogramm(
         latency_threads_1,
-        "threads (I/O 1ms)",
-        "threads",
+        "Threads (I/O 1 ms)",
+        "Threads",
         ax_latency_threads,
         ax_latency_threads_table,
     )
-    plot_line_hdr_histogramm(
+    plot_line_hdr_histogramm_cut(
         latency_workers_1,
-        "processes (I/O 1ms)",
-        "processes",
+        "Prozesse (I/O 1 ms)",
+        "Prozesse",
         ax_latency_worker,
         ax_latency_worker_table,
     )
@@ -269,194 +337,197 @@ def main():
     fig.savefig("wsgi_latency_1.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 20})
+    # plt.rcParams.update({"font.size": 20})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(20, 10),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [10, 10]
+    # hights = [7, 3]
+    # spec = gridspec.GridSpec(
+    #     ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_latency_threads = fig.add_subplot(spec[0, 0])
+    # ax_latency_threads_table = fig.add_subplot(spec[1, 0])
+    # ax_latency_worker = fig.add_subplot(spec[0, 1])
+    # ax_latency_worker_table = fig.add_subplot(spec[1, 1])
+
+    # plot_line_hdr_histogramm(
+    #     latency_threads_50,
+    #     "threads (I/O 50ms)",
+    #     "threads",
+    #     ax_latency_threads,
+    #     ax_latency_threads_table,
+    # )
+    # plot_line_hdr_histogramm(
+    #     latency_workers_50,
+    #     "processes (I/O 50ms)",
+    #     "processes",
+    #     ax_latency_worker,
+    #     ax_latency_worker_table,
+    # )
+
+    # fig.savefig("wsgi_latency_50.pdf")
+    # plt.close(fig)
+
+    plt.rcParams.update({"font.size": 9})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(10, 3),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10, 10]
-    hights = [7, 3]
+    widths = [5, 5]
+    hights = [3]
     spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_latency_threads = fig.add_subplot(spec[0, 0])
-    ax_latency_threads_table = fig.add_subplot(spec[1, 0])
-    ax_latency_worker = fig.add_subplot(spec[0, 1])
-    ax_latency_worker_table = fig.add_subplot(spec[1, 1])
-
-    plot_line_hdr_histogramm(
-        latency_threads_50,
-        "threads (I/O 50ms)",
-        "threads",
-        ax_latency_threads,
-        ax_latency_threads_table,
-    )
-    plot_line_hdr_histogramm(
-        latency_workers_50,
-        "processes (I/O 50ms)",
-        "processes",
-        ax_latency_worker,
-        ax_latency_worker_table,
-    )
-
-    fig.savefig("wsgi_latency_50.pdf")
-    plt.close(fig)
-
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(12, 6),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [6, 6]
-    hights = [5, 1]
-    spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=2, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_throughput_threads = fig.add_subplot(spec[0, 0])
-    ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
+    # ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
     ax_throughput_worker = fig.add_subplot(spec[0, 1])
-    ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
+    # ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
 
     plot_bar(
         throughput_threads_1,
-        "Throughput threads (I/O 1ms)",
-        "threads",
+        "Durchsatz Threads (I/O 1 ms)",
+        "Threads",
         ax_throughput_threads,
-        ax_throughput_threads_table,
+        # ax_throughput_threads_table,
     )
     plot_bar(
         throughput_workers_1,
-        "Throughput processes (I/O 1ms)",
-        "processes",
+        "Durchsatz Prozesse (I/O 1 ms)",
+        "Prozesse",
         ax_throughput_worker,
-        ax_throughput_worker_table,
+        # ax_throughput_worker_table,
     )
 
     fig.savefig("wsgi_throughput_1.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 9})
     fig = plt.figure(
         num=None,
-        figsize=(12, 6),
+        figsize=(10, 3),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [6, 6]
-    hights = [5, 1]
+    widths = [5, 5]
+    hights = [3]
     spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=2, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_throughput_threads = fig.add_subplot(spec[0, 0])
-    ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
+    # ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
     ax_throughput_worker = fig.add_subplot(spec[0, 1])
-    ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
+    # ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
 
     plot_bar(
         throughput_threads_50,
-        "Throughput threads (I/O 50ms)",
-        "threads",
+        "Durchsatz Threads (I/O 50 ms)",
+        "Threads",
         ax_throughput_threads,
-        ax_throughput_threads_table,
+        # ax_throughput_threads_table,
     )
     plot_bar(
         throughput_workers_50,
-        "Throughput processes (I/O 50ms)",
-        "processes",
+        "Durchsatz Prozesse (I/O 50 ms)",
+        "Prozesse",
         ax_throughput_worker,
-        ax_throughput_worker_table,
+        # ax_throughput_worker_table,
     )
 
     fig.savefig("wsgi_throughput_50.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(20, 10),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [20]
-    hights = [7, 3]
-    spec = gridspec.GridSpec(
-        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_latency = fig.add_subplot(spec[0, 0])
-    ax_latency_table = fig.add_subplot(spec[1, 0])
-    # ax_throughput = fig.add_subplot(spec[0, 1])
-    # ax_throughput_table = fig.add_subplot(spec[1, 1])
+    # fig.savefig("wsgi_throughput_50.pdf")
+    # plt.close(fig)
 
-    plot_line_hdr_histogramm_w_t(latency_threads_worker, ax_latency, ax_latency_table)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(20, 10),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [20]
+    # hights = [7, 3]
+    # spec = gridspec.GridSpec(
+    #     ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_latency = fig.add_subplot(spec[0, 0])
+    # ax_latency_table = fig.add_subplot(spec[1, 0])
+    # # ax_throughput = fig.add_subplot(spec[0, 1])
+    # # ax_throughput_table = fig.add_subplot(spec[1, 1])
+
+    # plot_line_hdr_histogramm_w_t(latency_threads_worker, ax_latency, ax_latency_table)
+    # # plot_bar_w_t(throughput_threads_worker, ax_throughput, ax_throughput_table)
+
+    # fig.savefig("wsgi_combi_latency_50.pdf")
+    # plt.close(fig)
+
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(12, 6),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [12]
+    # hights = [5, 1]
+    # spec = gridspec.GridSpec(
+    #     ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_throughput = fig.add_subplot(spec[0, 0])
+    # ax_throughput_table = fig.add_subplot(spec[1, 0])
     # plot_bar_w_t(throughput_threads_worker, ax_throughput, ax_throughput_table)
+    # fig.savefig("wsgi_combi_throughput_50.pdf")
+    # plt.close(fig)
 
-    fig.savefig("wsgi_combi_latency_50.pdf")
-    plt.close(fig)
-
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 9})
     fig = plt.figure(
         num=None,
-        figsize=(12, 6),
+        figsize=(10, 3),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [12]
-    hights = [5, 1]
+    widths = [5, 5]
+    hights = [3]
     spec = gridspec.GridSpec(
-        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_throughput = fig.add_subplot(spec[0, 0])
-    ax_throughput_table = fig.add_subplot(spec[1, 0])
-    plot_bar_w_t(throughput_threads_worker, ax_throughput, ax_throughput_table)
-    fig.savefig("wsgi_combi_throughput_50.pdf")
-    plt.close(fig)
-
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(12, 6),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [6, 6]
-    hights = [5, 1]
-    spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=2, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_latency_threads = fig.add_subplot(spec[0, 0])
-    ax_latency_threads_table = fig.add_subplot(spec[1, 0])
+    # ax_throughput_threads_table = fig.add_subplot(spec[1, 0])
     ax_latency_worker = fig.add_subplot(spec[0, 1])
-    ax_latency_worker_table = fig.add_subplot(spec[1, 1])
+    # ax_throughput_worker_table = fig.add_subplot(spec[1, 1])
 
     plot_bar_latency(
         latency_threads_50,
-        "Latency threads (I/O 50ms)",
-        "threads",
+        "Latenz Threads (I/O 50 ms)",
+        "Threads",
         ax_latency_threads,
-        ax_latency_threads_table,
+        #       ax_latency_threads_table,
     )
     plot_bar_latency(
         latency_workers_50,
-        "Latency processes (I/O 50ms)",
-        "processes",
+        "Latenz Prozesse (I/O 50 ms)",
+        "Prozesse",
         ax_latency_worker,
-        ax_latency_worker_table,
+        #        ax_latency_worker_table,
     )
 
     fig.savefig("wsgi_bar_latency_50.pdf")

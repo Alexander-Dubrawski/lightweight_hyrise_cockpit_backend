@@ -1,4 +1,5 @@
 # type: ignore
+# flake8: noqa
 from datetime import timedelta
 from statistics import median
 
@@ -34,7 +35,7 @@ def plot_cpu_usage(date, ax, component, number_dbs):
     ax.grid()
 
 
-def plot_hdr_histogramm_1_90(data, ax):
+def plot_hdr_histogramm_1_90(data, ax, ax_table):
     percentiles = ["1%", "50%", "60%", "70%", "80%", "90%"]
     number_dbs = [1, 10, 20, 40]
     component_color = {
@@ -51,22 +52,30 @@ def plot_hdr_histogramm_1_90(data, ax):
         row = []
         for percentile in percentiles:
             y_values.append(data[n_db][percentile])
-            if percentile != "90%":
-                row.append(data[n_db][percentile])
+            row.append(data[n_db][percentile])
         rows.append(["%07.3f" % val for val in row])
         ax.plot(
             percentiles,
             y_values,
-            label=f"database obj {n_db}",
+            label=f"Datenbank Objekte {n_db}",
             linewidth=4.0,
             color=component_color[n_db],
         )
     ax.legend(loc="upper left")
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("Percentile")
-    ax.set_title("Latency by Percentile Distribution")
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Perzentil")
+    ax.set_title("Latenz nach Perzentilverteilung")
     ax.grid()
-    return (rows, row_labels, ["1%", "50%", "60%", "70%", "80%"])
+    ax_table.axis("tight")
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=rows,
+        rowLabels=row_labels,
+        cellLoc="center",
+        colLabels=percentiles,
+        loc="center",
+    )
+    table.scale(1, 2)
 
 
 def plot_hdr_histogramm_90_99(data, ax):
@@ -92,14 +101,14 @@ def plot_hdr_histogramm_90_99(data, ax):
         ax.plot(
             percentiles,
             y_values,
-            label=f"database obj {n_db}",
+            label=f"Datenbank Objekt {n_db}",
             linewidth=4.0,
             color=component_color[n_db],
         )
     ax.legend(loc="upper left")
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("Percentile")
-    ax.set_title("Latency by Percentile Distribution")
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Perzentil")
+    ax.set_title("Latenz nach Perzentilverteilung")
     ax.grid()
     percentiles.append("99.99%")
     return (rows, row_labels, percentiles)
@@ -167,96 +176,80 @@ def main():
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10, 8]
+    widths = [18]
     hights = [7, 3]
     spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
-    ax_io_latency_1_90 = fig.add_subplot(spec[0, 0])
-    ax_io_latency_90_99 = fig.add_subplot(spec[0, 1])
+    ax_io_latency_1_90 = fig.add_subplot(spec[0, :])
+    # ax_io_latency_90_99 = fig.add_subplot(spec[0, 1])
     ax_io_latency_table = fig.add_subplot(spec[1, :])
 
-    rows_1, row_labels_1, percentiles_1 = plot_hdr_histogramm_1_90(
-        latency, ax_io_latency_1_90
-    )
-    rows_90, row_labels_90, percentiles_90 = plot_hdr_histogramm_90_99(
-        latency, ax_io_latency_90_99
-    )
-    ax_io_latency_table.axis("tight")
-    ax_io_latency_table.axis("off")
-    table = ax_io_latency_table.table(
-        cellText=[row_1 + row_90 for row_1, row_90 in zip(rows_1, rows_90)],
-        rowLabels=row_labels_1,
-        cellLoc="center",
-        colLabels=percentiles_1 + percentiles_90,
-        loc="center",
-    )
-    table.scale(1, 2)
-
+    plot_hdr_histogramm_1_90(latency, ax_io_latency_1_90, ax_io_latency_table)
     fig.savefig("user_scenario_latency.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(20, 10),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [20]
-    hights = [7, 3]
-    spec = gridspec.GridSpec(
-        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_throughput = fig.add_subplot(spec[0, 0])
-    ax_througput_table = fig.add_subplot(spec[1, 0])
-    plot_bar(throughput, ax_throughput, ax_througput_table)
-    fig.savefig("user_scenario_throughput.pdf")
-    plt.close(fig)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(20, 10),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [20]
+    # hights = [7, 3]
+    # spec = gridspec.GridSpec(
+    #     ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_throughput = fig.add_subplot(spec[0, 0])
+    # ax_througput_table = fig.add_subplot(spec[1, 0])
+    # plot_bar(throughput, ax_throughput, ax_througput_table)
+    # fig.savefig("user_scenario_throughput.pdf")
+    # plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(20, 10),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [20]
-    hights = [10]
-    spec = gridspec.GridSpec(
-        ncols=1, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_manager = fig.add_subplot(spec[0, 0])
-    # ax_wsgi = fig.add_subplot(spec[0, 1])
-    for n_db in [1, 10, 20, 40]:
-        plot_cpu_usage(cpu_usage[n_db], ax_manager, "manager", n_db)
-        # plot_cpu_usage(cpu_usage[n_db], ax_wsgi, "back_end", n_db)
-    fig.savefig("user_scenario_cpu.pdf")
-    plt.close(fig)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(20, 10),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [20]
+    # hights = [10]
+    # spec = gridspec.GridSpec(
+    #     ncols=1, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_manager = fig.add_subplot(spec[0, 0])
+    # # ax_wsgi = fig.add_subplot(spec[0, 1])
+    # for n_db in [1, 10, 20, 40]:
+    #     plot_cpu_usage(cpu_usage[n_db], ax_manager, "manager", n_db)
+    #     # plot_cpu_usage(cpu_usage[n_db], ax_wsgi, "back_end", n_db)
+    # fig.savefig("user_scenario_cpu.pdf")
+    # plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(20, 10),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [20]
-    hights = [7, 3]
-    spec = gridspec.GridSpec(
-        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_usage = fig.add_subplot(spec[0, 0])
-    ax_usage_table = fig.add_subplot(spec[1, 0])
-    plot_bar_cpu(cpu_usage, ax_usage, ax_usage_table, "manager")
-    fig.savefig("bar_cpu_usage.pdf")
-    plt.close(fig)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(20, 10),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [20]
+    # hights = [7, 3]
+    # spec = gridspec.GridSpec(
+    #     ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_usage = fig.add_subplot(spec[0, 0])
+    # ax_usage_table = fig.add_subplot(spec[1, 0])
+    # plot_bar_cpu(cpu_usage, ax_usage, ax_usage_table, "manager")
+    # fig.savefig("bar_cpu_usage.pdf")
+    # plt.close(fig)
 
 
 if __name__ == "__main__":
