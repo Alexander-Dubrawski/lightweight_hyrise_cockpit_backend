@@ -6,6 +6,20 @@ import numpy as np
 from .req_rep_zmq_results import latency, throughput
 
 
+def autolabel(rects, ax):
+    """Attach a text label above each bar in *rects*, displaying its height."""
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate(
+            "{}".format(height),
+            xy=(rect.get_x() + rect.get_width() / 2, height),
+            xytext=(0, 3),  # 3 points vertical offset
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+        )
+
+
 def plot_line_hdr_histogramm(data, ax, ax_table):
     percentiles = ["1%", "50%", "99%", "99.9%", "99.99%"]
     number_clients = [1, 2, 4, 8, 16, 32, 64]
@@ -53,104 +67,93 @@ def plot_line_hdr_histogramm(data, ax, ax_table):
     table.scale(1, 3)
 
 
-def plot_bar(data, ax, ax_table):
+def plot_bar(data, ax):
     number_clients = [1, 2, 4, 8, 16, 32, 64]
     values = []
+    max_value = 0
     for number_client in number_clients:
         values.append(data[number_client])
+        if max_value < data[number_client]:
+            max_value = data[number_client]
     ind = np.arange(len(number_clients))
     width = 0.60
-    ax.bar(ind, values, width, label="req/sec")
+    bar_chart = ax.bar(ind, values, width, label="Anfragen / Sek.")
+    autolabel(bar_chart, ax)
     ax.legend()
-    ax.set_ylabel("req/sec")
-    ax.set_xlabel("clients")
-    ax.set_title("Throughput")
+    ax.set_ylabel("Anfragen / Sek")
+    ax.set_xlabel("Klienten")
+    ax.set_title("Durchsatz")
     ax.set_xticks(ind)
     ax.set_xticklabels(number_clients)
-    ax_table.axis("tight")
-    ax_table.axis("off")
-    table = ax_table.table(
-        cellText=[["%05.3f" % val for val in values]],
-        rowLabels=["AVG"],
-        cellLoc="center",
-        colLabels=number_clients,
-        loc="center",
-    )
-    table.scale(1, 2)
-    table.set_fontsize(30)
+    y_max = (max_value / 100) * 10
+    ax.axis(ymin=0, ymax=(y_max + max_value))
 
 
-def plot_bar_latency(data, ax, ax_table):
+def plot_bar_latency(data, ax):
     number_clients = [1, 2, 4, 8, 16, 32, 64]
     values = []
+    max_value = 0
     for number_client in number_clients:
         values.append(data[number_client]["50%"])
+        if max_value < data[number_client]["50%"]:
+            max_value = data[number_client]["50%"]
     ind = np.arange(len(number_clients))
     width = 0.60
-    ax.bar(ind, values, width, label="avg_latency")
+    bar_chart = ax.bar(ind, values, width, label="Latenz i. D.")
     ax.legend()
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("Clients")
-    ax.set_title("Latency")
+    autolabel(bar_chart, ax)
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Klienten")
+    ax.set_title("Latenz")
     ax.set_xticks(ind)
     ax.set_xticklabels(number_clients)
-    ax_table.axis("tight")
-    ax_table.axis("off")
-    table = ax_table.table(
-        cellText=[["%05.3f" % val for val in values]],
-        rowLabels=["AVG"],
-        cellLoc="center",
-        colLabels=number_clients,
-        loc="center",
-    )
-    table.scale(1, 2)
-    table.set_fontsize(30)
+    y_max = (max_value / 100) * 10
+    ax.axis(ymin=0, ymax=(y_max + max_value))
 
 
 def main():
     plt.rcParams.update({"font.size": 22})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(10, 10),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10, 10]
-    hights = [6, 4]
+    widths = [10]
+    hights = [10]
     spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=1, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
     )
     ax_latency = fig.add_subplot(spec[0, 0])
     ax_latency_table = fig.add_subplot(spec[1, 0])
-    ax_throughput = fig.add_subplot(spec[0, 1])
-    ax_throughput_table = fig.add_subplot(spec[1, 1])
 
     plot_line_hdr_histogramm(latency, ax_latency, ax_latency_table)
     fig.savefig("zmq_req_rep.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 9})
+    # plt.rcParams['axes.formatter.use_locale'] = True
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(10, 3),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
-    widths = [10, 10]
-    hights = [6, 4]
+    widths = [5, 5]
+    hights = [3]
     spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+        ncols=2, nrows=1, figure=fig, width_ratios=widths, height_ratios=hights
     )
-    ax_latency = fig.add_subplot(spec[0, 0])
-    ax_latency_table = fig.add_subplot(spec[1, 0])
-    ax_throughput = fig.add_subplot(spec[0, 1])
-    ax_throughput_table = fig.add_subplot(spec[1, 1])
-    plot_bar(throughput, ax_throughput, ax_throughput_table)
-    plot_bar_latency(latency, ax_latency, ax_latency_table)
+    ax_left = fig.add_subplot(spec[0, 0])
+    # ax_io_flask_throughput_table = fig.add_subplot(spec[1, 0])
+    ax_right = fig.add_subplot(spec[0, 1])
+    # ax_io_manager_throughput_table = fig.add_subplot(spec[1, 1])
+    plot_bar(throughput, ax_left)
+    plot_bar_latency(latency, ax_right)
     fig.savefig("bar_latency_rqp_req.pdf")
     plt.close(fig)
 
