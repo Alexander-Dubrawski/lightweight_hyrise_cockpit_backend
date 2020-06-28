@@ -1,4 +1,4 @@
-# Lightweight Cockpit
+# Synthetic Cockpit
 
 ## Setup
 
@@ -75,14 +75,8 @@ You can start the components as follow:
 To run the benchmarks you need to have the following components installed:
 
 * WRK https://github.com/wg/wrk
-* curl 
-* top
+* ps 
 
-You can run the benchmarks as follow 
+You can run the benchmarks for example as follow 
+`pipenv run python -m benchmark.wsgi_benchmark`
 
-* Latency benchmarks: `pipenv run python -m benchmark_tools.latency.latency_benchmark`
-* User scenario latency benchmarks: `pipenv run python -m benchmark_tools.latency.user_scenario_benchmark`
-* Sequential wrk throughput benchmarks: `pipenv run python -m benchmark_tools.throughput.sequencial_wrk_benchmark`
-* Parallel wrk throughput benchmarks: `pipenv run python -m benchmark_tools.throughput.parallel_wrk_benchmark`
-* User scenario throughput benchmarks: `pipenv run python -m benchmark_tools.throughput.user_scenario_benchmark`
-* System benchmark: `pipenv run python -m benchmark_tools.system.system_benchmark`
