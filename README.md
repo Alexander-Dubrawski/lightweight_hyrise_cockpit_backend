@@ -1,5 +1,7 @@
 # Synthetic Cockpit
 
+This is a synthetic version of the Hyrise Cockpit (https://github.com/hyrise/Cockpit). It is used to analyze possible performance improvements in the architecture of the backend. 
+
 ## Setup
 
 You may need to install a different python version (`3.8.2`, e.g. using [`pyenv`](https://github.com/pyenv/pyenv#installation)).
