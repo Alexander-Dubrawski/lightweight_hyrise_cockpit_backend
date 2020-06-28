@@ -6,16 +6,12 @@ import numpy as np
 from .wrk_user_results import (
     avg_latency_flask,
     avg_latency_manager,
-    latency_flask,
-    latency_manager,
     throughput_flask,
     throughput_manager,
 )
 from .wrk_user_results_after import (
     avg_latency_flask_after,
     avg_latency_manager_after,
-    latency_flask_after,
-    latency_manager_after,
     throughput_flask_after,
     throughput_manager_after,
 )
@@ -25,23 +21,34 @@ def plot_bar_latency(data_before, data_after, endpoint, ax, ax_table):
     quantities = [1, 2, 4, 8, 16, 32, 64]
     before_values = []
     after_values = []
+    max_value = 0
     for quan in quantities:
         before_values.append(data_before[quan])
+        if max_value < data_before[quan]:
+            max_value = data_before[quan]
         after_values.append(data_after[quan])
+        if max_value < data_after[quan]:
+            max_value = data_after[quan]
     ind = np.arange(len(quantities))
     width = 0.30
     ax.bar(
-        ind - width / 2, before_values, width, label="avg latency before", color="blue"
+        ind - width / 2,
+        before_values,
+        width,
+        label="befor Optimierung",
+        color="steelblue",
     )
     ax.bar(
-        ind + width / 2, after_values, width, label="avg latency after", color="orange",
+        ind + width / 2, after_values, width, label="nach Optimierung", color="orange",
     )
-    ax.legend()
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("clients")
-    ax.set_title(f"Comparison latency before and after {endpoint}")
+    ax.legend(prop={"size": 13}, loc="upper left")
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Klienten")
+    ax.set_title(f"Latenz bevor und nach Optimierung {endpoint}")
     ax.set_xticks(ind)
     ax.set_xticklabels(quantities)
+    y_max = (max_value / 100) * 20
+    ax.axis(ymin=0, ymax=(y_max + max_value))
     ax_table.axis("tight")
     ax_table.axis("off")
     table = ax_table.table(
@@ -49,44 +56,47 @@ def plot_bar_latency(data_before, data_after, endpoint, ax, ax_table):
             ["%08.3f" % val for val in before_values],
             ["%08.3f" % val for val in after_values],
         ],
-        rowLabels=["AVG before", "AVG after"],
+        rowLabels=["bevor", "nach"],
         cellLoc="center",
         colLabels=quantities,
         loc="center",
     )
     table.scale(1, 2)
-    table.set_fontsize(30)
+    table.set_fontsize(25)
 
 
 def plot_bar_throughput(data_before, data_after, endpoint, ax, ax_table):
     quantities = [1, 2, 4, 8, 16, 32, 64]
     before_values = []
     after_values = []
+    max_value = 0
     for quan in quantities:
         before_values.append(data_before[quan])
+        if max_value < data_before[quan]:
+            max_value = data_before[quan]
         after_values.append(data_after[quan])
+        if max_value < data_after[quan]:
+            max_value = data_after[quan]
     ind = np.arange(len(quantities))
     width = 0.30
     ax.bar(
         ind - width / 2,
         before_values,
         width,
-        label="avg throughput before",
-        color="blue",
+        label="bevor Optimierung",
+        color="steelblue",
     )
     ax.bar(
-        ind + width / 2,
-        after_values,
-        width,
-        label="avg throughput after",
-        color="orange",
+        ind + width / 2, after_values, width, label="nach Optimierung", color="orange",
     )
-    ax.legend()
-    ax.set_ylabel("Throughput (req/sec)")
-    ax.set_xlabel("clients")
-    ax.set_title(f"Comparison throughput before and after {endpoint}")
+    ax.legend(prop={"size": 13}, loc="upper left")
+    ax.set_ylabel("Anfragen / Sek.")
+    ax.set_xlabel("Klienten")
+    ax.set_title(f"Durchsatz bevor und nach Optimierung {endpoint}")
     ax.set_xticks(ind)
     ax.set_xticklabels(quantities)
+    y_max = (max_value / 100) * 25
+    ax.axis(ymin=0, ymax=(y_max + max_value))
     ax_table.axis("tight")
     ax_table.axis("off")
     table = ax_table.table(
@@ -94,13 +104,13 @@ def plot_bar_throughput(data_before, data_after, endpoint, ax, ax_table):
             ["%05.2f" % val for val in before_values],
             ["%05.2f" % val for val in after_values],
         ],
-        rowLabels=["AVG before", "AVG after"],
+        rowLabels=["bevor", "nach"],
         cellLoc="center",
         colLabels=quantities,
         loc="center",
     )
     table.scale(1, 2)
-    table.set_fontsize(30)
+    table.set_fontsize(12)
 
 
 def plot_line_hdr_histogramm(data, title, ax, ax_table):
@@ -148,20 +158,21 @@ def plot_line_hdr_histogramm(data, title, ax, ax_table):
         loc="center",
     )
     table.scale(1, 3)
+    table.set_fontsize(25)
 
 
 def main():
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 19})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(20, 7),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
     widths = [10, 10]
-    hights = [8, 2]
+    hights = [5, 2]
     spec = gridspec.GridSpec(
         ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
@@ -186,17 +197,17 @@ def main():
     fig.savefig("before_after_flask_metric.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
+    plt.rcParams.update({"font.size": 19})
     fig = plt.figure(
         num=None,
-        figsize=(20, 10),
+        figsize=(20, 7),
         dpi=300,
         facecolor="w",
         edgecolor="k",
         constrained_layout=True,
     )
     widths = [10, 10]
-    hights = [8, 2]
+    hights = [5, 2]
     spec = gridspec.GridSpec(
         ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
     )
@@ -221,59 +232,59 @@ def main():
     fig.savefig("before_after_manager_metric.pdf")
     plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(30, 15),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [15, 15]
-    hights = [10, 5]
-    spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_top_left = fig.add_subplot(spec[0, 0])
-    ax_top_right = fig.add_subplot(spec[0, 1])
-    ax_down_left = fig.add_subplot(spec[1, 0])
-    ax_down_right = fig.add_subplot(spec[1, 1])
-    plot_line_hdr_histogramm(
-        latency_flask, "flask_metric before", ax_top_left, ax_down_left
-    )
-    plot_line_hdr_histogramm(
-        latency_flask_after, "flask_metric after", ax_top_right, ax_down_right
-    )
-    fig.savefig("before_after_flask_latency.pdf")
-    plt.close(fig)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(30, 15),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [15, 15]
+    # hights = [10, 5]
+    # spec = gridspec.GridSpec(
+    #     ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_top_left = fig.add_subplot(spec[0, 0])
+    # ax_top_right = fig.add_subplot(spec[0, 1])
+    # ax_down_left = fig.add_subplot(spec[1, 0])
+    # ax_down_right = fig.add_subplot(spec[1, 1])
+    # plot_line_hdr_histogramm(
+    #     latency_flask, "flask_metric before", ax_top_left, ax_down_left
+    # )
+    # plot_line_hdr_histogramm(
+    #     latency_flask_after, "flask_metric after", ax_top_right, ax_down_right
+    # )
+    # fig.savefig("before_after_flask_latency.pdf")
+    # plt.close(fig)
 
-    plt.rcParams.update({"font.size": 22})
-    fig = plt.figure(
-        num=None,
-        figsize=(30, 15),
-        dpi=300,
-        facecolor="w",
-        edgecolor="k",
-        constrained_layout=True,
-    )
-    widths = [15, 15]
-    hights = [10, 5]
-    spec = gridspec.GridSpec(
-        ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    )
-    ax_top_left = fig.add_subplot(spec[0, 0])
-    ax_top_right = fig.add_subplot(spec[0, 1])
-    ax_down_left = fig.add_subplot(spec[1, 0])
-    ax_down_right = fig.add_subplot(spec[1, 1])
-    plot_line_hdr_histogramm(
-        latency_manager, "manager_metric before", ax_top_left, ax_down_left
-    )
-    plot_line_hdr_histogramm(
-        latency_manager_after, "manager_metric after", ax_top_right, ax_down_right
-    )
-    fig.savefig("before_after_manager_latency.pdf")
-    plt.close(fig)
+    # plt.rcParams.update({"font.size": 22})
+    # fig = plt.figure(
+    #     num=None,
+    #     figsize=(30, 15),
+    #     dpi=300,
+    #     facecolor="w",
+    #     edgecolor="k",
+    #     constrained_layout=True,
+    # )
+    # widths = [15, 15]
+    # hights = [10, 5]
+    # spec = gridspec.GridSpec(
+    #     ncols=2, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    # )
+    # ax_top_left = fig.add_subplot(spec[0, 0])
+    # ax_top_right = fig.add_subplot(spec[0, 1])
+    # ax_down_left = fig.add_subplot(spec[1, 0])
+    # ax_down_right = fig.add_subplot(spec[1, 1])
+    # plot_line_hdr_histogramm(
+    #     latency_manager, "manager_metric before", ax_top_left, ax_down_left
+    # )
+    # plot_line_hdr_histogramm(
+    #     latency_manager_after, "manager_metric after", ax_top_right, ax_down_right
+    # )
+    # fig.savefig("before_after_manager_latency.pdf")
+    # plt.close(fig)
 
 
 if __name__ == "__main__":

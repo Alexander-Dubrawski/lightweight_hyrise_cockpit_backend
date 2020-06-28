@@ -185,7 +185,7 @@ def plot_line(data_balanced, data_not_balanced, title, ax):
     ax.grid()
 
 
-def plot_bar_latency(data_balanced, data_not_balanced, ax):
+def plot_bar_latency(data_balanced, data_not_balanced, x_label, ax):
     values = []
     max_value = data_balanced
     if max_value < data_not_balanced:
@@ -209,10 +209,10 @@ def plot_bar_latency(data_balanced, data_not_balanced, ax):
     autolabel(bar_chart_balanced, ax)
     autolabel(bar_chart_not_balanced, ax)
     ax.legend(prop={"size": 13})
-    ax.set_xlabel("Prozesse")
+    ax.set_xlabel("Arbeiter-Prozesse")
     ax.set_xticks(ind)
-    ax.set_xticklabels([2])
-    ax.set_ylabel("Anfragen / Sek.")
+    ax.set_xticklabels([x_label])
+    ax.set_ylabel("Latenz (Millisekunden)")
     ax.set_title("Latenz i. D.")
     y_max = (max_value / 100) * 20
     ax.axis(ymin=0, ymax=(y_max + max_value))
@@ -289,6 +289,7 @@ def main():
     plot_bar_latency(
         get_avg_latency(2, 1, "worker", "balanced"),
         get_avg_latency(2, 1, "worker", "not_balanced"),
+        2,
         ax_top_right,
     )
     plot_line_total_single(
@@ -319,6 +320,7 @@ def main():
     plot_bar_latency(
         get_avg_latency(32, 50, "worker", "balanced"),
         get_avg_latency(32, 50, "worker", "not_balanced"),
+        32,
         ax_top_right,
     )
     plot_line_total_single(

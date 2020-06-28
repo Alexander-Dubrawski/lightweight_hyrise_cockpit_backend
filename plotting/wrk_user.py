@@ -115,7 +115,7 @@ def plot_line_hdr_histogramm(data, title, ax):
     # table.scale(1, 3)
 
 
-def plot_bar(data, title, ax, ylable):
+def plot_bar(data, title, ax, ylable, ymax=None):
     number_clients = [1, 2, 4, 8, 16, 32, 64]
     values = []
     max_value = 0
@@ -142,8 +142,11 @@ def plot_bar(data, title, ax, ylable):
     ax.set_title(title)
     ax.set_xticks(ind)
     ax.set_xticklabels(number_clients)
-    y_max = (max_value / 100) * 10
-    ax.axis(ymin=0, ymax=(y_max + max_value))
+    if ymax is None:
+        y_max = ((max_value / 100) * 10) + max_value
+    else:
+        y_max = ymax
+    ax.axis(ymin=0, ymax=y_max)
     # ax_table.axis("tight")
     # ax_table.axis("off")
     # table = ax_table.table(
@@ -184,6 +187,7 @@ def main():
         ax_io_flask_throughput,
         # ax_io_flask_throughput_table,
         "Anfragen / Sek.",
+        ymax=22,
     )
     plot_bar(
         throughput_manager,
@@ -191,6 +195,7 @@ def main():
         ax_io_manager_throughput,
         # ax_io_manager_throughput_table,
         "Anfragen / Sek.",
+        ymax=22,
     )
     fig.savefig("user_wrk_throughput.pdf")
     plt.close(fig)
@@ -222,6 +227,7 @@ def main():
         ax_io_flask_latency,
         # ax_io_flask_latency_table,
         "Latenz (Millisekunden)",
+        ymax=3900,
     )
     plot_bar(
         avg_latency_manager,
@@ -229,6 +235,7 @@ def main():
         ax_io_manager_latency,
         # ax_io_manager_latency_table,
         "Latenz (Millisekunden)",
+        ymax=3900,
     )
     fig.savefig("user_wrk_latency.pdf")
     plt.close(fig)

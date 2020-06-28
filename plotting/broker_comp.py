@@ -54,7 +54,7 @@ def plot_bar_latency(
         no_balance_value.append(data_broker[quan][0]["50%"])
     ind = np.arange(len(quantities))
     width = 0.30
-    if p_type == "Threads":
+    if p_type == "Arbeiter-Threads":
         no_balance_color = "orange"
         balance_color = "firebrick"
     else:
@@ -109,7 +109,7 @@ def plot_bar_throughput(
         no_balance_value.append(data_broker[quan][0])
     ind = np.arange(len(quantities))
     width = 0.30
-    if p_type == "Threads":
+    if p_type == "Arbeiter-Threads":
         no_balance_color = "orange"
         balance_color = "firebrick"
     else:
@@ -165,7 +165,7 @@ def plot_bar_throughput_broker_comp(data_broker, data_balance, title, p_type, ax
             max_value = data_broker[quan][0]
     ind = np.arange(len(quantities))
     width = 0.30
-    if p_type == "Threads":
+    if p_type == "Arbeiter-Threads":
         no_balance_color = "orange"
         balance_color = "firebrick"
     else:
@@ -278,16 +278,16 @@ def main():
     plot_bar_latency(
         latency_threads_not_balanced_1,
         latency_threads_balanced_1,
-        "Threads (I/O 1 ms)",
-        "Threads",
+        "Arbeiter-Threads (I/O 1 ms)",
+        "Arbeiter-Threads",
         ax_top_left,
         ax_down_left,
     )
     plot_bar_latency(
         latency_workers_not_balanced_1,
         latency_workers_balanced_1,
-        "Prozesse (I/O 1 ms)",
-        "Prozesse",
+        "Arbeiter-Prozesse (I/O 1 ms)",
+        "Arbeiter-Prozesse",
         ax_top_right,
         ax_down_right,
     )
@@ -315,16 +315,16 @@ def main():
     plot_bar_throughput(
         throughput_threads_not_balanced_1,
         throughput_threads_balanced_1,
-        "Threads (I/O 1 ms)",
-        "Threads",
+        "Arbeiter-Threads (I/O 1 ms)",
+        "Arbeiter-Threads",
         ax_top_left,
         ax_down_left,
     )
     plot_bar_throughput(
         throughput_workers_not_balanced_1,
         throughput_workers_balanced_1,
-        "Prozesse (I/O 1 ms)",
-        "Prozesse",
+        "Arbeiter-Prozesse (I/O 1 ms)",
+        "Arbeiter-Prozesse",
         ax_top_right,
         ax_down_right,
     )
@@ -352,16 +352,16 @@ def main():
     plot_bar_latency(
         latency_threads_not_balanced_50,
         latency_threads_balanced_50,
-        "Threads (I/O 50 ms)",
-        "Threads",
+        "Arbeiter-Threads (I/O 50 ms)",
+        "Arbeiter-Threads",
         ax_top_left,
         ax_down_left,
     )
     plot_bar_latency(
         latency_workers_not_balanced_50,
         latency_workers_balanced_50,
-        "Prozesse (I/O 50 ms)",
-        "Prozesse",
+        "Arbeiter-Prozesse (I/O 50 ms)",
+        "Arbeiter-Prozesse",
         ax_top_right,
         ax_down_right,
     )
@@ -389,16 +389,16 @@ def main():
     plot_bar_throughput(
         throughput_threads_not_balanced_50,
         throughput_threads_balanced_50,
-        "Threads (I/O 50 ms)",
-        "Threads",
+        "Arbeiter-Threads (I/O 50 ms)",
+        "Arbeiter-Threads",
         ax_top_left,
         ax_down_left,
     )
     plot_bar_throughput(
         throughput_workers_not_balanced_50,
         throughput_workers_balanced_50,
-        "Prozesse (I/O 50 ms)",
-        "Prozesse",
+        "Arbeiter-Prozesse (I/O 50 ms)",
+        "Arbeiter-Prozesse",
         ax_top_right,
         ax_down_right,
     )
@@ -424,7 +424,7 @@ def main():
         throughput_workers_not_balanced_slow,
         throughput_workers_balanced_slow,
         "Durchsatz",
-        "Prozesse",
+        "Arbeiter-Prozesse",
         ax_top_left,
     )
     fig.savefig("comp_slow_worker_throughput_broker.pdf")
@@ -450,7 +450,7 @@ def main():
         latency_workers_not_balanced_slow,
         latency_workers_balanced_slow,
         "Latenz",
-        "Prozesse",
+        "Arbeiter-Prozesse",
         ax_top_left,
         ax_down_left,
     )

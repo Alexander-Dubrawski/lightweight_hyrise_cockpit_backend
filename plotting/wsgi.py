@@ -42,7 +42,7 @@ def plot_bar_latency(data, title, p_type, ax):
             max_value = data[quan]["50%"]
     ind = np.arange(len(quantities))
     width = 0.60
-    if p_type == "Threads":
+    if p_type == "Arbeiter-Threads":
         color = "darkorange"
     else:
         color = "steelblue"
@@ -111,10 +111,10 @@ def plot_line_hdr_histogramm_w_t(data, ax, ax_table):
             linewidth=4.0,
             color=component_color[quan],
         )
-    ax.legend(loc="upper left")
-    ax.set_ylabel("Latency (milliseconds)")
-    ax.set_xlabel("Percentile")
-    ax.set_title("Latency by Percentile Distribution")
+    ax.legend(loc="upper left", prop={"size": 15})
+    ax.set_ylabel("Latenz (Millisekunden)")
+    ax.set_xlabel("Perzentil")
+    ax.set_title("Latenz nach Perzentilverteilung")
     ax.grid()
     ax_table.axis("tight")
     ax_table.axis("off")
@@ -247,7 +247,7 @@ def plot_line_hdr_histogramm_cut(data, title, p_type, ax, ax_table):
     ax.set_xlabel("Perzentil")
     ax.set_title(f"Latenz nach Perzentilverteilung {title}")
     ax.grid()
-    ax.axis(ymin=0, ymax=(2700))
+    ax.axis(ymin=0, ymax=(2800))
     ax_table.axis("tight")
     ax_table.axis("off")
     table = ax_table.table(
@@ -261,7 +261,7 @@ def plot_line_hdr_histogramm_cut(data, title, p_type, ax, ax_table):
     table.set_fontsize(30)
 
 
-def plot_bar(data, title, p_type, ax):
+def plot_bar(data, title, p_type, ax, ymax=None):
     quantities = [1, 2, 4, 8, 16, 32, 64]
     values = []
     max_value = 0
@@ -271,7 +271,7 @@ def plot_bar(data, title, p_type, ax):
             max_value = data[quan]
     ind = np.arange(len(quantities))
     width = 0.60
-    if p_type == "Threads":
+    if p_type == "Arbeiter-Threads":
         color = "darkorange"
     else:
         color = "steelblue"
@@ -284,8 +284,11 @@ def plot_bar(data, title, p_type, ax):
     ax.set_title(title)
     ax.set_xticks(ind)
     ax.set_xticklabels(quantities)
-    y_max = (max_value / 100) * 10
-    ax.axis(ymin=0, ymax=(y_max + max_value))
+    if ymax is None:
+        y_max = ((max_value / 100) * 10) + max_value
+    else:
+        y_max = ymax
+    ax.axis(ymin=0, ymax=(y_max))
     # ax_table.axis("tight")
     # ax_table.axis("off")
     # table = ax_table.table(
@@ -300,7 +303,7 @@ def plot_bar(data, title, p_type, ax):
 
 
 def main():
-    plt.rcParams.update({"font.size": 20})
+    plt.rcParams.update({"font.size": 18})
     fig = plt.figure(
         num=None,
         figsize=(20, 10),
@@ -321,15 +324,15 @@ def main():
 
     plot_line_hdr_histogramm(
         latency_threads_1,
-        "Threads (I/O 1 ms)",
-        "Threads",
+        "Arbeiter-Threads (I/O 1 ms)",
+        "Arbeiter-Threads",
         ax_latency_threads,
         ax_latency_threads_table,
     )
     plot_line_hdr_histogramm_cut(
         latency_workers_1,
-        "Prozesse (I/O 1 ms)",
-        "Prozesse",
+        "Arbeiter-Prozesse (I/O 1 ms)",
+        "Arbeiter-Prozesse",
         ax_latency_worker,
         ax_latency_worker_table,
     )
@@ -395,16 +398,18 @@ def main():
 
     plot_bar(
         throughput_threads_1,
-        "Durchsatz Threads (I/O 1 ms)",
-        "Threads",
+        "Durchsatz Arbeiter-Threads (I/O 1 ms)",
+        "Arbeiter-Threads",
         ax_throughput_threads,
+        ymax=212
         # ax_throughput_threads_table,
     )
     plot_bar(
         throughput_workers_1,
-        "Durchsatz Prozesse (I/O 1 ms)",
-        "Prozesse",
+        "Durchsatz Arbeiter-Prozesse (I/O 1 ms)",
+        "Arbeiter-Prozesse",
         ax_throughput_worker,
+        ymax=212
         # ax_throughput_worker_table,
     )
 
@@ -432,16 +437,18 @@ def main():
 
     plot_bar(
         throughput_threads_50,
-        "Durchsatz Threads (I/O 50 ms)",
-        "Threads",
+        "Durchsatz Arbeiter-Threads (I/O 50 ms)",
+        "Arbeiter-Threads",
         ax_throughput_threads,
+        ymax=21
         # ax_throughput_threads_table,
     )
     plot_bar(
         throughput_workers_50,
-        "Durchsatz Prozesse (I/O 50 ms)",
-        "Prozesse",
+        "Durchsatz Arbeiter-Prozesse (I/O 50 ms)",
+        "Arbeiter-Prozesse",
         ax_throughput_worker,
+        ymax=21
         # ax_throughput_worker_table,
     )
 
@@ -451,30 +458,30 @@ def main():
     # fig.savefig("wsgi_throughput_50.pdf")
     # plt.close(fig)
 
-    # plt.rcParams.update({"font.size": 22})
-    # fig = plt.figure(
-    #     num=None,
-    #     figsize=(20, 10),
-    #     dpi=300,
-    #     facecolor="w",
-    #     edgecolor="k",
-    #     constrained_layout=True,
-    # )
-    # widths = [20]
-    # hights = [7, 3]
-    # spec = gridspec.GridSpec(
-    #     ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
-    # )
-    # ax_latency = fig.add_subplot(spec[0, 0])
-    # ax_latency_table = fig.add_subplot(spec[1, 0])
-    # # ax_throughput = fig.add_subplot(spec[0, 1])
-    # # ax_throughput_table = fig.add_subplot(spec[1, 1])
+    plt.rcParams.update({"font.size": 22})
+    fig = plt.figure(
+        num=None,
+        figsize=(15, 8),
+        dpi=300,
+        facecolor="w",
+        edgecolor="k",
+        constrained_layout=True,
+    )
+    widths = [15]
+    hights = [5, 3]
+    spec = gridspec.GridSpec(
+        ncols=1, nrows=2, figure=fig, width_ratios=widths, height_ratios=hights
+    )
+    ax_latency = fig.add_subplot(spec[0, 0])
+    ax_latency_table = fig.add_subplot(spec[1, 0])
+    # ax_throughput = fig.add_subplot(spec[0, 1])
+    # ax_throughput_table = fig.add_subplot(spec[1, 1])
 
-    # plot_line_hdr_histogramm_w_t(latency_threads_worker, ax_latency, ax_latency_table)
-    # # plot_bar_w_t(throughput_threads_worker, ax_throughput, ax_throughput_table)
+    plot_line_hdr_histogramm_w_t(latency_threads_worker, ax_latency, ax_latency_table)
+    # plot_bar_w_t(throughput_threads_worker, ax_throughput, ax_throughput_table)
 
-    # fig.savefig("wsgi_combi_latency_50.pdf")
-    # plt.close(fig)
+    fig.savefig("wsgi_combi_latency_50.pdf")
+    plt.close(fig)
 
     # plt.rcParams.update({"font.size": 22})
     # fig = plt.figure(
@@ -517,15 +524,15 @@ def main():
 
     plot_bar_latency(
         latency_threads_50,
-        "Latenz Threads (I/O 50 ms)",
-        "Threads",
+        "Latenz Arbeiter-Threads (I/O 50 ms)",
+        "Arbeiter-Threads",
         ax_latency_threads,
         #       ax_latency_threads_table,
     )
     plot_bar_latency(
         latency_workers_50,
-        "Latenz Prozesse (I/O 50 ms)",
-        "Prozesse",
+        "Latenz Arbeiter-Prozesse (I/O 50 ms)",
+        "Arbeiter-Prozesse",
         ax_latency_worker,
         #        ax_latency_worker_table,
     )
