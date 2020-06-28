@@ -10,10 +10,10 @@ from time import gmtime, sleep, time_ns
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.pyplot import figure
-from zmq import REQ, Context
 
 from backend.request import Header, Request
 from backend.settings import DB_MANAGER_HOST, DB_MANAGER_PORT
+from zmq import REQ, Context
 
 # NUmmer Clients erhöhen
 CLIENTS = [1, 2, 4, 8, 16, 32, 64]
